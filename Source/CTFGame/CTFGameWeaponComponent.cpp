@@ -78,8 +78,15 @@ bool UCTFGameWeaponComponent::AttachWeapon(ACTFGameCharacter* TargetCharacter)
 
 	// Attach the weapon to the First Person Character
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-	AttachToComponent(Character->GetMesh1P(), AttachmentRules, FName(TEXT("GripPoint")));
-
+	
+	if (Character->IsLocallyControlled()) {
+		AttachToComponent(Character->GetMesh1P(), AttachmentRules, FName(TEXT("GripPoint")));
+	}
+	else
+	{
+		AttachToComponent(Character->GetMesh3P(), AttachmentRules, FName(TEXT("GripPoint")));
+	}
+	
 	// Set up action bindings
 	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
 	{
