@@ -14,6 +14,8 @@ class CTFGAME_API ACTFGameMode : public AGameMode
 {
 	GENERATED_BODY()
 
+public:
+	ACTFGameMode();
 
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
