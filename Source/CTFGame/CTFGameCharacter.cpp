@@ -35,6 +35,14 @@ ACTFGameCharacter::ACTFGameCharacter()
 	Mesh1P->CastShadow = false;
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
+	// Create a mesh component that will be used when being viewed from a '3rd person' view (when controlling other pawns)
+	Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh3P"));
+	Mesh3P->SetOwnerNoSee(true);
+	Mesh3P->SetupAttachment(GetCapsuleComponent());
+	Mesh3P->bCastDynamicShadow = true;
+	Mesh3P->CastShadow = true;
+	Mesh3P->SetRelativeLocation(FVector(0.f, 0.f, -90.f));
+
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
