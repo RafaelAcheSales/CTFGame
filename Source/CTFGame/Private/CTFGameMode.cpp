@@ -3,6 +3,8 @@
 
 #include "CTFGameMode.h"
 #include "../CTFGameCharacter.h"
+#include "TeamManager.h"
+#include "EngineUtils.h"
 #include "UObject/ConstructorHelpers.h"
 
 ACTFGameMode::ACTFGameMode()
@@ -16,5 +18,20 @@ ACTFGameMode::ACTFGameMode()
 void ACTFGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
+    if (NewPlayer && NewPlayer->PlayerState)
+    {
+        ATeamManager* TeamManager = nullptr;
+
+        for (TActorIterator<ATeamManager> It(GetWorld()); It; ++It)
+        {
+            TeamManager = *It;
+            break;
+        }
+
+        if (TeamManager)
+        {
+            TeamManager->AssignPlayerToTeam(NewPlayer->PlayerState);
+        }
+    }
 }
 

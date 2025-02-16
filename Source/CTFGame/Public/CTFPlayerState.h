@@ -20,7 +20,7 @@ public:
     ACTFPlayerState();
 
 protected:
-    UPROPERTY(ReplicatedUsing = OnRep_Team)
+    UPROPERTY(ReplicatedUsing = OnRep_Team, VisibleAnywhere, BlueprintReadOnly, Category = "Team")
     ETeamColor Team;
 
 public:
