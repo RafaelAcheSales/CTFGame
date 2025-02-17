@@ -4,8 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/CapsuleComponent.h"
 #include "Flag.generated.h"
 
+
+class USkeletalMeshComponent;
+class UCapsuleComponent;
 
 //Flag that saves its spawn location. it also detects player interaction (collided) and sets the flag as taken.
 //Attaches to socket on player's back called "FlagSocket".
@@ -23,6 +27,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	USkeletalMeshComponent* FlagMesh;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UCapsuleComponent* CapsuleComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
+	FVector CapsuleOffset;
 
 protected:
 	// Called when the game starts or when spawned
@@ -32,8 +41,18 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	FVector SpawnLocation;
 
+	// Gets capsule component
+	UCapsuleComponent* GetCapsuleComponent() const { return CapsuleComponent; };
+
+
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION()
+	void OnFlagOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+		bool bFromSweep, const FHitResult& SweepResult);
 
 };
