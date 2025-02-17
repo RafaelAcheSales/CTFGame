@@ -21,6 +21,7 @@ UCTFGameWeaponComponent::UCTFGameWeaponComponent()
 
 void UCTFGameWeaponComponent::Fire()
 {
+    UE_LOG(LogTemp, Warning, TEXT("Fire() called"));
     // If we’re a client (or non-authority), call the Server function:
     // The server will do the actual projectile spawn.
     if (!GetOwner() || !GetOwner()->HasAuthority())
