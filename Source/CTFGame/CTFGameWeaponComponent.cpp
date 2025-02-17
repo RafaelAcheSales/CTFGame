@@ -124,13 +124,16 @@ bool UCTFGameWeaponComponent::AttachWeapon(ACTFGameCharacter* TargetCharacter)
 
     // Attach the weapon to the appropriate mesh
     FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-
-    if (Character->IsLocallyControlled())
+    bool isLocallyControlled = Character->IsLocallyControlled();
+    UE_LOG(LogTemp, Warning, TEXT("isLocallyControlled: %d"), isLocallyControlled);
+    if (isLocallyControlled)
     {
+        UE_LOG(LogTemp, Warning, TEXT("Attaching to 1P mesh"));
         AttachToComponent(Character->GetMesh1P(), AttachmentRules, FName(TEXT("GripPoint")));
     }
     else
     {
+        UE_LOG(LogTemp, Warning, TEXT("Attaching to 3P mesh"));
         AttachToComponent(Character->GetMesh3P(), AttachmentRules, FName(TEXT("GripPoint")));
     }
 
