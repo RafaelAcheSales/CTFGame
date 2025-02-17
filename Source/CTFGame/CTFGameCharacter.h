@@ -59,6 +59,8 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
+	AActor* Weapon;
+
 protected:
 	// APawn interface
 	virtual void NotifyControllerChanged() override;
@@ -73,6 +75,12 @@ public:
 	USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+
+	/** Returns Weapon Pointer if its in socket **/
+	AActor* GetWeapon() const;
+
+	/** Sets Weapon Pointer **/
+	void SetWeapon(AActor* Weapon);
 
 };
 

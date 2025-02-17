@@ -22,6 +22,12 @@ void UCTFGamePickUpComponent::OnSphereBeginOverlap(UPrimitiveComponent* Overlapp
 	ACTFGameCharacter* Character = Cast<ACTFGameCharacter>(OtherActor);
 	if(Character != nullptr)
 	{
+		// Return in case player already has Weapon Attached
+		if(Character->GetWeapon() != nullptr)
+		{
+			return;
+		}
+
 		// Notify that the actor is being picked up
 		OnPickUp.Broadcast(Character);
 

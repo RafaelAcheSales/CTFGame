@@ -43,6 +43,8 @@ ACTFGameCharacter::ACTFGameCharacter()
 	Mesh3P->CastShadow = true;
 	Mesh3P->SetRelativeLocation(FVector(0.f, 0.f, -90.f));
 
+	SetWeapon(nullptr);
+
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -107,4 +109,14 @@ void ACTFGameCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+
+AActor* ACTFGameCharacter::GetWeapon() const
+{
+	return Weapon;
+}
+
+void ACTFGameCharacter::SetWeapon(AActor* NewWeapon)
+{
+	Weapon = NewWeapon;
 }

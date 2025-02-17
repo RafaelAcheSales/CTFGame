@@ -119,12 +119,13 @@ bool UCTFGameWeaponComponent::AttachWeapon(ACTFGameCharacter* TargetCharacter)
         return false;
     }
 
+    Character->SetWeapon(GetOwner());
     GetOwner()->SetOwner(Character);
 
     // Attach the weapon to the appropriate mesh
     FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 
-    if (Character->IsLocallyControlled())
+    if (Character->HasAuthority())
     {
         AttachToComponent(Character->GetMesh1P(), AttachmentRules, FName(TEXT("GripPoint")));
     }
