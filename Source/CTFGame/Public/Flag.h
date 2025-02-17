@@ -41,8 +41,21 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	FVector SpawnLocation;
 
+
 	// Gets capsule component
 	UCapsuleComponent* GetCapsuleComponent() const { return CapsuleComponent; };
+
+	// Attaches to player
+	void AttachToPlayer(class ACTFGameCharacter* Player);
+
+	//Drop the flag
+	void Drop();
+
+	//Respawn the flag
+	void Respawn();
+
+	//Score a point
+	void ScorePoint();
 
 
 
