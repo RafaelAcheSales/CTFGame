@@ -125,22 +125,19 @@ bool UCTFGameWeaponComponent::AttachWeapon(ACTFGameCharacter* TargetCharacter)
     // Attach the weapon to the appropriate mesh
     FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 
+    ENetRole CurrentRole = Character->GetLocalRole();
+    UE_LOG(LogTemp, Warning, TEXT("AttachWeapon() Role: %d"), static_cast<int32>(CurrentRole));
 
-    bool hasAuthority = Character->HasAuthority();
-    UE_LOG(LogTemp, Warning, TEXT("AttachWeapon() hasAuthority: %d"), hasAuthority);
-    bool isLocallyControlled = Character->IsLocallyControlled();
-    UE_LOG(LogTemp, Warning, TEXT("AttachWeapon() isLocallyControlled: %d"), isLocallyControlled);
-    if (isLocallyControlled)
+    if (CurrentRole == ROLE_AutonomousProxy)
     {
         AttachToComponent(Character->GetMesh1P(), AttachmentRules, FName(TEXT("GripPoint")));
-        UE_LOG(LogTemp, Warning, TEXT("AttachWeapon() attached to 1P mesh for %s and hasAuthority: %d, isLocallyControlled: %d"), *Character->GetName(), hasAuthority, isLocallyControlled);
+        UE_LOG(LogTemp, Warning, TEXT("AttachWeapon() attached to 1P mesh for %s"), *Character->GetName());
     }
-	else
-	{
-		AttachToComponent(Character->GetMesh3P(), AttachmentRules, FName(TEXT("GripPoint")));
-        UE_LOG(LogTemp, Warning, TEXT("AttachWeapon() attached to 3P mesh for %s and hasAuthority: %d, isLocallyControlled: %d"), *Character->GetName(), hasAuthority, isLocallyControlled);
-	}
-
+    else if (CurrentRole == ROLE_SimulatedProxy)
+    {
+        AttachToComponent(Character->GetMesh3P(), AttachmentRules, FName(TEXT("GripPoint")));
+        UE_LOG(LogTemp, Warning, TEXT("AttachWeapon() attached to 3P mesh for %s"), *Character->GetName());
+    }
 
     // Set up action bindings
     if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
@@ -159,6 +156,7 @@ bool UCTFGameWeaponComponent::AttachWeapon(ACTFGameCharacter* TargetCharacter)
 
     return true;
 }
+
 
 void UCTFGameWeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
