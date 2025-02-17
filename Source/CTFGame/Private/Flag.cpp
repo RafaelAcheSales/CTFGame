@@ -19,6 +19,12 @@ AFlag::AFlag()
 	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionCapsule"));
 	CapsuleComponent->InitCapsuleSize(50.0f, 75.0f);
 	CapsuleComponent->SetCollisionProfileName(TEXT("Trigger"));
+	CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	CapsuleComponent->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+	CapsuleComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	CapsuleComponent->SetCollisionResponseToChannel(ECC_Pawn, ECollisionResponse::ECR_Overlap); // Detects players
+	CapsuleComponent->SetupAttachment(RootComponent);
+
 
 	CapsuleOffset = FVector(0.0f, 0.0f, 50.0f);
 
