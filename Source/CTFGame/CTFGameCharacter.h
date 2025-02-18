@@ -49,6 +49,10 @@ class ACTFGameCharacter : public ACharacter
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
+
+	/** Change Team Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ChangeTeamAction;
 	
 public:
 	ACTFGameCharacter();
@@ -60,9 +64,21 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
+	void ChangeTeam();
+
 	AActor* Weapon;
 
 protected:
+	/** Server RPC to handle material setting */
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_SetTeamMaterial(ETeamColor Team);
+	void Server_SetTeamMaterial_Implementation(ETeamColor Team);
+	bool Server_SetTeamMaterial_Validate(ETeamColor Team);
+
+	/** Multicast RPC to update the material on all clients */
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SetTeamMaterial(ETeamColor Team);
+	void Multicast_SetTeamMaterial_Implementation(ETeamColor Team);
 	// APawn interface
 	virtual void NotifyControllerChanged() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
@@ -86,6 +102,8 @@ public:
 	//respawn
 	void Respawn();
 
+	void UpdateTeamMaterial();
+
 
 	/** Returns Mesh1P subobject **/
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
@@ -94,6 +112,7 @@ public:
 	USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
 
 	/** Function to set material based on TeamColors **/
+	UFUNCTION(BlueprintCallable, Category = "Team")
 	void SetTeamMaterial(ETeamColor Team);
 
 	/** Array of Materials (1 and 2 for Red team) **/

@@ -100,6 +100,7 @@ void ACTFGameCharacter::BeginPlay()
 	{
 		BlueDynamicMaterials.Add(UMaterialInstanceDynamic::Create(BlueMaterials[i], this));
 	}
+	Mesh3P->SetMaterial(0, RedDynamicMaterials[0]);
 	// Apply the player's current team material
 	UpdateTeamMaterial();
 }
