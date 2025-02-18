@@ -6,6 +6,7 @@
 #include "CTFPlayerState.h"
 #include "TeamColors.h"
 #include "DrawDebugHelpers.h"
+#include "Engine/DamageEvents.h"
 #include "Components/SphereComponent.h"
 
 ACTFGameProjectile::ACTFGameProjectile() 
@@ -37,46 +38,37 @@ ACTFGameProjectile::ACTFGameProjectile()
 
 void ACTFGameProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// Only add impulse and destroy projectile if` we hit a physics
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
-	{
-		//try
-		//	{
-		//	UE_LOG(LogTemp, Warning, TEXT("Owner of Projectile: %s"), *GetOwner()->GetName());
-		//	UE_LOG(LogTemp, Warning, TEXT("Owner of HitCharacter: %s"), *OtherActor->GetName());
-		//}
-		//catch (const std::exception& e)
-		//{
-		//	UE_LOG(LogTemp, Warning, TEXT("Error: %s"), *FString(e.what()));
-		//}
+    // Ensure only the Autonomous Proxy (Owner Client) processes the hit
+    if (GetOwner()->GetLocalRole() != ROLE_AutonomousProxy) return;
 
-		// if it hit a player, deal damage based on ETeamColor
-		// debugs on screen if it hit a player and both projectile + player owners's playerstate colors
+    if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
+    {
+        if (ACTFGameCharacter* HitCharacter = Cast<ACTFGameCharacter>(OtherActor))
+        {
+            ACTFGameCharacter* ProjectileOwnerCharacter = Cast<ACTFGameCharacter>(GetOwner());
+            ACTFPlayerState* ProjectileOwnerPlayerState = ProjectileOwnerCharacter ? Cast<ACTFPlayerState>(ProjectileOwnerCharacter->GetPlayerState()) : nullptr;
+            ACTFPlayerState* HitPlayerState = Cast<ACTFPlayerState>(HitCharacter->GetPlayerState());
 
-		if (ACTFGameCharacter* HitCharacter = Cast<ACTFGameCharacter>(OtherActor))
-		{
-			ACTFGameCharacter* ProjectileOwnerCharacter = Cast<ACTFGameCharacter>(GetOwner());
-			ACTFPlayerState* ProjectileOwnerPlayerState = Cast<ACTFPlayerState>(ProjectileOwnerCharacter->GetPlayerState());
-			ACTFPlayerState* HitPlayerState = Cast<ACTFPlayerState>(HitCharacter->GetPlayerState());
+            if (ProjectileOwnerPlayerState && HitPlayerState)
+            {
+                if (ProjectileOwnerPlayerState->GetTeam() == HitPlayerState->GetTeam())
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("Friendly Fire!"));
+                }
+                else
+                {
+                    // Apply damage only once
+                    HitCharacter->TakeDamage(20.0f, FDamageEvent(), GetOwner()->GetInstigatorController(), this);
+					UE_LOG(LogTemp, Warning, TEXT("Hit %s"), *HitCharacter->GetName());
+                }
+            }
+        }
 
-			if (ProjectileOwnerPlayerState && HitPlayerState)
-			{
-				if (ProjectileOwnerPlayerState->GetTeam() == HitPlayerState->GetTeam())
-				{
-					UE_LOG(LogTemp, Warning, TEXT("Friendly Fire!"));
-				}
-				else
-				{
-					UE_LOG(LogTemp, Warning, TEXT("Enemy Hit!"));
-				}
-			}
-		}
+        if (OtherComp->IsSimulatingPhysics())
+        {
+            OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
+        }
 
-		if (OtherComp->IsSimulatingPhysics())
-		{
-			OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
-
-			Destroy();
-		}
-	}
+        Destroy();
+    }
 }

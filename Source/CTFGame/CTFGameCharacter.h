@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "TeamColors.h"
 #include "CTFGameCharacter.generated.h"
 
 class UInputComponent;
@@ -67,12 +68,53 @@ protected:
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
 
+	virtual void BeginPlay() override;
+
 public:
+
+	// CurrentHealth
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
+	float Health;
+
+	// MaxHealth
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
+	float MaxHealth;
+
+	// override TakeDamage
+	virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+	//respawn
+	void Respawn();
+
+
 	/** Returns Mesh1P subobject **/
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 
 	/** Returns Mesh3P subobject **/
 	USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
+
+	/** Function to set material based on TeamColors **/
+	void SetTeamMaterial(ETeamColor Team);
+
+	/** Array of Materials (1 and 2 for Red team) **/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Team")
+	TArray<UMaterialInstance*> RedMaterials;
+
+	/** dynamic material instance for team color **/
+	UPROPERTY()
+	TArray<UMaterialInstanceDynamic*> RedDynamicMaterials;
+
+	/** Array of Materials (1 and 2 for Blue team) **/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Team")
+	TArray<UMaterialInstance*> BlueMaterials;
+
+	/** dynamic material instance for team color **/
+	UPROPERTY()
+	TArray<UMaterialInstanceDynamic*> BlueDynamicMaterials;
+
+
+
+
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
