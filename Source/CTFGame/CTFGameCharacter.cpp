@@ -14,6 +14,7 @@
 #include "Engine/LocalPlayer.h"
 #include "CTFPlayerState.h"  // Include the PlayerState header
 #include "GameFramework/PlayerStart.h"
+#include <Components/WidgetComponent.h>
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -54,6 +55,9 @@ ACTFGameCharacter::ACTFGameCharacter()
 
 	MaxHealth = 100.0f;
 	Health = MaxHealth;
+
+	
+	
 }
 
 //////////////////////////////////////////////////////////////////////////// Input

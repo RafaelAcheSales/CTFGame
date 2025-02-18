@@ -7,7 +7,6 @@
 #include "TeamColors.h"
 #include "CTFGameState.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnScoreUpdated);
 
 USTRUCT(BlueprintType)
 struct FTeamScore
@@ -21,6 +20,7 @@ struct FTeamScore
     int32 Score;
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdated, const TArray<FTeamScore>&, UpdatedTeamScores);
 /**
  * 
  */
@@ -30,7 +30,7 @@ class CTFGAME_API ACTFGameState : public AGameState
 	GENERATED_BODY()
 	
 public:
-    UPROPERTY(ReplicatedUsing = OnRep_Score)
+	UPROPERTY(ReplicatedUsing = OnRep_Score, BlueprintReadOnly, VisibleAnywhere, Category = "Score")
     TArray<FTeamScore> TeamScores;
 
     UPROPERTY(BlueprintAssignable, Category = "Score")
