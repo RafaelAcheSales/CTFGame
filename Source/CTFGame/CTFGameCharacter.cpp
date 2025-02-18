@@ -206,32 +206,11 @@ void ACTFGameCharacter::Multicast_SetTeamMaterial_Implementation(ETeamColor Team
 				if ((*TeamMaterials)[i])
 				{
 					MeshComp->SetMaterial(i, (*TeamMaterials)[i]);
-					UE_LOG(LogTemplateCharacter, Warning, TEXT("Set material %s"), *(*TeamMaterials)[i]->GetName());
-					UE_LOG(LogTemplateCharacter, Warning, TEXT("Set material %s"), *MeshComp->GetMaterial(i)->GetName());
-
-					//print role
-					if (GetLocalRole() == ROLE_Authority)
-					{
-						UE_LOG(LogTemplateCharacter, Warning, TEXT("Role: Authority"));
-					}
-					else if (GetLocalRole() == ROLE_AutonomousProxy)
-					{
-						UE_LOG(LogTemplateCharacter, Warning, TEXT("Role: AutonomousProxy"));
-					}
-					else if (GetLocalRole() == ROLE_SimulatedProxy)
-					{
-						UE_LOG(LogTemplateCharacter, Warning, TEXT("Role: SimulatedProxy"));
-					}
-					else
-					{
-						UE_LOG(LogTemplateCharacter, Warning, TEXT("Role: None"));
-					}
 				}
 			}
 
 			MeshComp->MarkRenderStateDirty();
 
-			UE_LOG(LogTemplateCharacter, Warning, TEXT("Updated team material to %s"), (Team == ETeamColor::Red) ? TEXT("Red") : TEXT("Blue"));
 		}
 		else
 		{

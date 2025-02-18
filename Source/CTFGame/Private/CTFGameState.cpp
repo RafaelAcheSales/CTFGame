@@ -16,6 +16,7 @@ void ACTFGameState::OnRep_Score()
 
 		}
 	}
+    OnScoreUpdatedEvent.Broadcast();
 }
 
 void ACTFGameState::UpdateTeamScore(ETeamColor TeamID, int32 Points)

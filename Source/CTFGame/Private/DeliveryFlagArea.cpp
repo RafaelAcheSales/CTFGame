@@ -1,43 +1,73 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "DeliveryFlagArea.h"
-#include "Flag.h"
-#include "Net/UnrealNetwork.h"
+#include "GameFramework/Actor.h"
+#include "Engine/Engine.h"
+#include "CTFGameState.h"
 
 // Sets default values
 ADeliveryFlagArea::ADeliveryFlagArea()
 {
-	// Set replication
-	//bReplicates = true;
+    // Enable ticking if needed
+    PrimaryActorTick.bCanEverTick = false;
 
-	// Create box component
-	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
-	BoxComponent->InitBoxExtent(FVector(100.0f, 100.0f, 100.0f));
-	BoxComponent->SetCollisionProfileName(TEXT("Trigger"));
-	BoxComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	BoxComponent->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
-	BoxComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	BoxComponent->SetCollisionResponseToChannel(ECC_WorldDynamic, ECollisionResponse::ECR_Overlap); // Detects flags
-	RootComponent = BoxComponent;
+    // Create and set up TriggerBox component
+    TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
+    RootComponent = TriggerBox;
 
-	BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &ADeliveryFlagArea::OnFlagOverlap);
+    // Set up collision for trigger detection
+    TriggerBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    TriggerBox->SetCollisionObjectType(ECC_WorldDynamic);
+    TriggerBox->SetCollisionResponseToAllChannels(ECR_Ignore);
+    TriggerBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+    // Bind overlap events
+    TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &ADeliveryFlagArea::OnOverlapBegin);
+    TriggerBox->OnComponentEndOverlap.AddDynamic(this, &ADeliveryFlagArea::OnOverlapEnd);
 
-	// Create platform mesh
-	PlatformMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlatformMesh"));
-	PlatformMesh->SetupAttachment(RootComponent);
+	// Create and set up StationMesh component
+	StationMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StationMesh"));
+	StationMesh->SetupAttachment(RootComponent);
+
 
 }
 
-void ADeliveryFlagArea::OnFlagOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+// Called when the game starts or when spawned
+void ADeliveryFlagArea::BeginPlay()
 {
-	AFlag* Flag = Cast<AFlag>(OtherActor);
-	if (Flag == nullptr) { return; }
-	Flag->ScorePoint();
+    Super::BeginPlay();
 }
 
+// Handle flag delivery when an actor enters the area
+void ADeliveryFlagArea::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+    bool bFromSweep, const FHitResult& SweepResult)
+{
+    if (OtherActor)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("%s entered the flag delivery area!"), *OtherActor->GetName());
+        DeliverFlag(OtherActor);
+    }
+}
 
-//void ADeliveryFlagArea::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-//{
-//	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-//	DOREPLIFETIME(ADeliveryFlagArea, TeamColor);
-//}
+// Handle when an actor leaves the trigger area
+void ADeliveryFlagArea::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+    if (OtherActor)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("%s left the flag delivery area!"), *OtherActor->GetName());
+    }
+}
+
+// Process flag delivery (customize as needed)
+void ADeliveryFlagArea::DeliverFlag(AActor* ActorDelivering)
+{
+    if (ActorDelivering)
+    {
+        // Get game state
+		ACTFGameState* GameState = Cast<ACTFGameState>(GetWorld()->GetGameState());
+        if (GameState)
+        {
+            GameState->UpdateTeamScore(Team, 1);
+            UE_LOG(LogTemp, Warning, TEXT("%s delivered the flag to the base!"), *ActorDelivering->GetName());
+        }
+    }
+}

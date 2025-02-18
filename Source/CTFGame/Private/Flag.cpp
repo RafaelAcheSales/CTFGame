@@ -28,6 +28,7 @@ AFlag::AFlag()
     CapsuleComponent->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
     CapsuleComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
     CapsuleComponent->SetCollisionResponseToChannel(ECC_Pawn, ECollisionResponse::ECR_Overlap); // Detects players
+    CapsuleComponent->SetCollisionResponseToChannel(ECC_WorldDynamic, ECollisionResponse::ECR_Overlap); // Detects Stuff
     CapsuleComponent->SetupAttachment(RootComponent);
 
     CapsuleOffset = FVector(0.0f, 0.0f, 50.0f);
