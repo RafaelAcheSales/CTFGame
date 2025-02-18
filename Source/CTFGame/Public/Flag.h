@@ -33,6 +33,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	FVector CapsuleOffset;
 
+	//Drop the flag
+	void Drop();
+
+	//Respawn the flag
+	void Respawn();
+
+	//Score a point
+	void ScorePoint();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -48,14 +57,7 @@ protected:
 	// Attaches to player
 	void AttachToPlayer(class ACTFGameCharacter* Player);
 
-	//Drop the flag
-	void Drop();
 
-	//Respawn the flag
-	void Respawn();
-
-	//Score a point
-	void ScorePoint();
 
 
 

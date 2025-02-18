@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include "TeamColors.h"
 #include "CTFGameMode.generated.h"
 
 /**
@@ -17,6 +18,12 @@ class CTFGAME_API ACTFGameMode : public AGameMode
 public:
 	ACTFGameMode();
 
+	void FlagCaptured(ETeamColor ScoringTeam);
+
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+
+
+
+
 };

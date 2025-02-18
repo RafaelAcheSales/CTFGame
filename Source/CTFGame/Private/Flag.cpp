@@ -4,6 +4,7 @@
 #include "Flag.h"
 #include "../CTFGameCharacter.h"
 #include "CTFPlayerState.h"
+#include "CTFGameState.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/PlayerState.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -93,12 +94,16 @@ void AFlag::ScorePoint()
     ACTFGameCharacter* FlagHolder = Cast<ACTFGameCharacter>(GetOwner());
     if (FlagHolder)
     {
-        ACTFPlayerState* PlayerState = FlagHolder->GetPlayerState<ACTFPlayerState>();
-        if (PlayerState)
+        ACTFGameState* GameState = GetWorld()->GetGameState<ACTFGameState>();
+        if (GameState)
         {
-            PlayerState->SetScore(PlayerState->GetScore() + 1);
-            UE_LOG(LogTemp, Warning, TEXT("Player %s scored a point!"), *FlagHolder->GetName());
-            Respawn();
+			ACTFPlayerState* MyPlayerState = Cast<ACTFPlayerState>(FlagHolder->GetPlayerState());
+			if (MyPlayerState)
+			{
+				ETeamColor TeamID = MyPlayerState->GetTeam();
+				GameState->UpdateTeamScore(TeamID, 1);
+				Respawn();
+			}
         }
     }
 }

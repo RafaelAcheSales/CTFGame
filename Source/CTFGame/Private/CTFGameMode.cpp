@@ -2,6 +2,7 @@
 
 
 #include "CTFGameMode.h"
+#include "CTFGameState.h"
 #include "../CTFGameCharacter.h"
 #include "TeamManager.h"
 #include "EngineUtils.h"
@@ -32,6 +33,15 @@ void ACTFGameMode::PostLogin(APlayerController* NewPlayer)
         {
             TeamManager->AssignPlayerToTeam(NewPlayer->PlayerState);
         }
+    }
+}
+
+void ACTFGameMode::FlagCaptured(ETeamColor ScoringTeam)
+{
+    ACTFGameState* GS = GetGameState<ACTFGameState>();
+    if (GS)
+    {
+        GS->UpdateTeamScore(ScoringTeam, 1);
     }
 }
 
