@@ -21,6 +21,9 @@ protected:
     UPROPERTY(Replicated)
     TArray<APlayerState*> TeamPlayers;
 
+	UPROPERTY(Replicated)
+	TArray<APlayerStart*> TeamStartPoints;
+
 public:
     UFUNCTION(BlueprintCallable, Category = "Teams")
     void AssignPlayerToTeam(APlayerState* PlayerState);
@@ -30,4 +33,6 @@ public:
 
 protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	virtual void BeginPlay() override;
 };

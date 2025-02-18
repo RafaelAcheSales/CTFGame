@@ -17,13 +17,14 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-UCLASS(config=Game)
+UCLASS(config = Game)
 class ACTFGameCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+private:
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Mesh, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* Mesh1P;
 
 	/** Other Player mesh: 3rd person view (body; seen by everyone) */
@@ -34,114 +35,116 @@ class ACTFGameCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 
-	/** MappingContext */
+	/** Input Mapping Context */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
 
-	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	/** Input Actions */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* JumpAction;
 
-	/** Move Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
 
-	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* LookAction;
+	UInputAction* LookAction;
 
-	/** Change Team Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* ChangeTeamAction;
-	
-public:
-	ACTFGameCharacter();
 
-protected:
-	/** Called for movement input */
-	void Move(const FInputActionValue& Value);
-
-	/** Called for looking input */
-	void Look(const FInputActionValue& Value);
-
-	void ChangeTeam();
-
+	/** Weapon Pointer */
 	AActor* Weapon;
 
 protected:
-	/** Server RPC to handle material setting */
+	virtual void BeginPlay() override;
+
+	/** Movement and Look Functions */
+	void Move(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
+	void ChangeTeam();
+
+	/** RPCs for Team Material Handling */
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_SetTeamMaterial(ETeamColor Team);
 	void Server_SetTeamMaterial_Implementation(ETeamColor Team);
 	bool Server_SetTeamMaterial_Validate(ETeamColor Team);
 
-	/** Multicast RPC to update the material on all clients */
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SetTeamMaterial(ETeamColor Team);
 	void Multicast_SetTeamMaterial_Implementation(ETeamColor Team);
-	// APawn interface
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastOnDeath();
+	void MulticastOnDeath_Implementation();
+
+	/** APawn Interface Overrides */
 	virtual void NotifyControllerChanged() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
-	// End of APawn interface
-
-	virtual void BeginPlay() override;
 
 public:
+	ACTFGameCharacter();
 
-	// CurrentHealth
+	/** Health Properties */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
 	float Health;
 
-	// MaxHealth
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
 	float MaxHealth;
 
-	// override TakeDamage
+	//RespawnTimerHandle
+	FTimerHandle RespawnTimerHandle;
+
+	// RespawnDelay
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
+	float RespawnDelay;
+
+	// SpawnPoint
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
+	APlayerStart* SpawnPoint;
+
+	/** Damage Handling */
 	virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
-
-	//respawn
+	void HandleDeath();
+	void PlayDeathAnimation();
+	void DisableCharacter();
+	void StartRespawnTimer();
 	void Respawn();
-
+	void RestoreCharacter();
+	void RespawnAtSpawnPoint();
 	void UpdateTeamMaterial();
 
-
-	/** Returns Mesh1P subobject **/
+	/** Mesh and Camera Getters */
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
-
-	/** Returns Mesh3P subobject **/
 	USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
+	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
-	/** Function to set material based on TeamColors **/
+	/** Weapon Handling */
+	AActor* GetWeapon() const;
+	void SetWeapon(AActor* NewWeapon);
+
+	/** Team Material Handling */
 	UFUNCTION(BlueprintCallable, Category = "Team")
 	void SetTeamMaterial(ETeamColor Team);
 
-	/** Array of Materials (1 and 2 for Red team) **/
+	/** Team Materials Arrays */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Team")
 	TArray<UMaterialInstance*> RedMaterials;
 
-	/** dynamic material instance for team color **/
 	UPROPERTY()
 	TArray<UMaterialInstanceDynamic*> RedDynamicMaterials;
 
-	/** Array of Materials (1 and 2 for Blue team) **/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Team")
 	TArray<UMaterialInstance*> BlueMaterials;
 
-	/** dynamic material instance for team color **/
 	UPROPERTY()
 	TArray<UMaterialInstanceDynamic*> BlueDynamicMaterials;
 
+	///////////////////////////////////////////
+	// Animations
+	///////////////////////////////////////////
 
+	/** Animation Montages */
 
-
-	/** Returns FirstPersonCameraComponent subobject **/
-	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
-
-	/** Returns Weapon Pointer if its in socket **/
-	AActor* GetWeapon() const;
-
-	/** Sets Weapon Pointer **/
-	void SetWeapon(AActor* Weapon);
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* DeathAnimation;
 };
-

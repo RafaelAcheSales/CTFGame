@@ -27,14 +27,13 @@ void ACTFPlayerState::OnRep_Team()
 {
     UE_LOG(LogTemp, Warning, TEXT("OnRep_Team called. Team: %d"), (int32)Team);
 
-    if (AActor* PlayerPawn = GetPawn())
+    AController* OwnerController = GetOwner<AController>();
+    if (OwnerController)
     {
+        APawn* PlayerPawn = OwnerController->GetPawn();
         if (ACTFGameCharacter* Character = Cast<ACTFGameCharacter>(PlayerPawn))
         {
-            if (USkeletalMeshComponent* MeshComp = Character->GetMesh3P())
-            {
-				Character->SetTeamMaterial(Team);
-            }
+            Character->UpdateTeamMaterial();
         }
     }
 }

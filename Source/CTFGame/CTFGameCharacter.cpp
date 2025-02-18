@@ -7,10 +7,14 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "TeamManager.h"
 #include "Engine/LocalPlayer.h"
 #include "CTFPlayerState.h"  // Include the PlayerState header
+#include "GameFramework/PlayerStart.h"
+
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -100,8 +104,10 @@ void ACTFGameCharacter::BeginPlay()
 	{
 		BlueDynamicMaterials.Add(UMaterialInstanceDynamic::Create(BlueMaterials[i], this));
 	}
-	// Apply the player's current team material
-	UpdateTeamMaterial();
+
+	//Register timer to call UpdateTeamMaterial every 3 seconds
+
+	GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &ACTFGameCharacter::UpdateTeamMaterial, 3.0f, true);
 }
 
 void ACTFGameCharacter::Move(const FInputActionValue& Value)
@@ -128,17 +134,17 @@ void ACTFGameCharacter::Look(const FInputActionValue& Value)
 
 void ACTFGameCharacter::ChangeTeam()
 {
-	ACTFPlayerState* MyPlayerState = GetPlayerState<ACTFPlayerState>();
-	if (!MyPlayerState) return;
+	//ACTFPlayerState* MyPlayerState = GetPlayerState<ACTFPlayerState>();
+	//if (!MyPlayerState) return;
 
-	// Toggle team and update PlayerState
-	ETeamColor NewTeam = (MyPlayerState->GetTeam() == ETeamColor::Red) ? ETeamColor::Blue : ETeamColor::Red;
-	MyPlayerState->SetTeam(NewTeam);
+	//// Toggle team and update PlayerState
+	////ETeamColor NewTeam = (MyPlayerState->GetTeam() == ETeamColor::Red) ? ETeamColor::Blue : ETeamColor::Red;
+	////MyPlayerState->SetTeam(NewTeam);
 
-	// Apply new team material
-	UpdateTeamMaterial();
+	//// Apply new team material
+	//UpdateTeamMaterial();	
 
-	UE_LOG(LogTemplateCharacter, Warning, TEXT("Changed team to %s"), (NewTeam == ETeamColor::Red) ? TEXT("Red") : TEXT("Blue"));
+	////UE_LOG(LogTemplateCharacter, Warning, TEXT("Changed team to %s"), (NewTeam == ETeamColor::Red) ? TEXT("Red") : TEXT("Blue"));
 }
 
 
@@ -152,7 +158,6 @@ void ACTFGameCharacter::UpdateTeamMaterial()
 
 void ACTFGameCharacter::SetTeamMaterial(ETeamColor Team)
 {
-	// Only the server can set the material
 	if (HasAuthority())
 	{
 		Multicast_SetTeamMaterial(Team);
@@ -162,6 +167,7 @@ void ACTFGameCharacter::SetTeamMaterial(ETeamColor Team)
 		Server_SetTeamMaterial(Team);
 	}
 }
+
 
 void ACTFGameCharacter::Server_SetTeamMaterial_Implementation(ETeamColor Team)
 {
@@ -202,6 +208,24 @@ void ACTFGameCharacter::Multicast_SetTeamMaterial_Implementation(ETeamColor Team
 					MeshComp->SetMaterial(i, (*TeamMaterials)[i]);
 					UE_LOG(LogTemplateCharacter, Warning, TEXT("Set material %s"), *(*TeamMaterials)[i]->GetName());
 					UE_LOG(LogTemplateCharacter, Warning, TEXT("Set material %s"), *MeshComp->GetMaterial(i)->GetName());
+
+					//print role
+					if (GetLocalRole() == ROLE_Authority)
+					{
+						UE_LOG(LogTemplateCharacter, Warning, TEXT("Role: Authority"));
+					}
+					else if (GetLocalRole() == ROLE_AutonomousProxy)
+					{
+						UE_LOG(LogTemplateCharacter, Warning, TEXT("Role: AutonomousProxy"));
+					}
+					else if (GetLocalRole() == ROLE_SimulatedProxy)
+					{
+						UE_LOG(LogTemplateCharacter, Warning, TEXT("Role: SimulatedProxy"));
+					}
+					else
+					{
+						UE_LOG(LogTemplateCharacter, Warning, TEXT("Role: None"));
+					}
 				}
 			}
 
@@ -217,6 +241,7 @@ void ACTFGameCharacter::Multicast_SetTeamMaterial_Implementation(ETeamColor Team
 }
 
 
+
 float ACTFGameCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	float DamageApplied = FMath::Min(Health, Damage);
@@ -226,18 +251,89 @@ float ACTFGameCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEven
 
 	if (Health <= 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s has died!"), *GetName());
-		GetWorldTimerManager().SetTimerForNextTick(this, &ACTFGameCharacter::Respawn);
+		MulticastOnDeath_Implementation();
 	}
 
 	return DamageApplied;
 }
+void ACTFGameCharacter::MulticastOnDeath_Implementation()
+{
+	HandleDeath();
+}
+void ACTFGameCharacter::HandleDeath()
+{
+	UE_LOG(LogTemp, Warning, TEXT("%s has died!"), *GetName());
+
+	PlayDeathAnimation();
+	//DisableCharacter();
+	//StartRespawnTimer();
+}
+
+void ACTFGameCharacter::PlayDeathAnimation()
+{
+	if (DeathAnimation)
+	{
+		PlayAnimMontage(DeathAnimation);
+	}
+}
+
+void ACTFGameCharacter::DisableCharacter()
+{
+	// Desativar entrada do jogador
+	AController* PlayerController = GetController();
+	if (PlayerController)
+	{
+		PlayerController->DisableInput(nullptr);
+	}
+
+	// Desativar movimento
+	GetCharacterMovement()->DisableMovement();
+
+	// Remover colisão para evitar interação
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void ACTFGameCharacter::StartRespawnTimer()
+{
+	GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &ACTFGameCharacter::Respawn, RespawnDelay, false);
+}
 
 void ACTFGameCharacter::Respawn()
 {
-	Health = MaxHealth;
+	RestoreCharacter();
+	RespawnAtSpawnPoint();
+
 	UE_LOG(LogTemp, Warning, TEXT("%s has respawned!"), *GetName());
 }
+
+void ACTFGameCharacter::RestoreCharacter()
+{
+	Health = MaxHealth;
+
+	// Restaurar entrada e movimento
+	AController* PlayerController = GetController();
+	if (PlayerController)
+	{
+		PlayerController->EnableInput(nullptr);
+	}
+
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
+	// Restaurar colisão
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+}
+
+void ACTFGameCharacter::RespawnAtSpawnPoint()
+{
+	
+	if (SpawnPoint)
+	{
+		SetActorLocation(SpawnPoint->GetActorLocation());
+		SetActorRotation(SpawnPoint->GetActorRotation());
+	}
+
+}
+
 
 
 AActor* ACTFGameCharacter::GetWeapon() const
@@ -245,7 +341,7 @@ AActor* ACTFGameCharacter::GetWeapon() const
 	return Weapon;
 }
 
-void ACTFGameCharacter::SetWeapon(AActor* NewWeapon)
+	void ACTFGameCharacter::SetWeapon(AActor* NewWeapon)
 {
 	Weapon = NewWeapon;
 }
