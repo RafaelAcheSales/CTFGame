@@ -1,47 +1,58 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "CTFGameMode.h"
-#include "CTFGameState.h"
 #include "../CTFGameCharacter.h"
 #include "TeamManager.h"
 #include "EngineUtils.h"
 #include "UObject/ConstructorHelpers.h"
+#include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerStart.h"
+#include <CTFPlayerState.h>
 
 ACTFGameMode::ACTFGameMode()
-	: Super()
+    : Super()
 {
-	// set default pawn class to our Blueprinted character
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/FirstPerson/Blueprints/BP_FirstPersonCharacter"));
-	DefaultPawnClass = PlayerPawnClassFinder.Class;
-
+    // Set default pawn class to your Blueprinted character
+    static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(
+        TEXT("/Game/FirstPerson/Blueprints/BP_FirstPersonCharacter")
+    );
+    DefaultPawnClass = PlayerPawnClassFinder.Class;
 }
+
 void ACTFGameMode::PostLogin(APlayerController* NewPlayer)
 {
+	//log if has authority
+	UE_LOG(LogTemp, Warning, TEXT("PostLogin() called has auth %d"), HasAuthority());
 	Super::PostLogin(NewPlayer);
-    if (NewPlayer && NewPlayer->PlayerState)
-    {
-        ATeamManager* TeamManager = nullptr;
-
-        for (TActorIterator<ATeamManager> It(GetWorld()); It; ++It)
-        {
-            TeamManager = *It;
-            break;
-        }
-
-        if (TeamManager)
-        {
-            TeamManager->AssignPlayerToTeam(NewPlayer->PlayerState);
-        }
-    }
+	// Assign the player to a team
+	ATeamManager* TeamManager = GetTeamManager();
+	if (TeamManager)
+	{
+		TeamManager->AssignPlayerToTeam(NewPlayer->PlayerState);
+	}
 }
 
-void ACTFGameMode::FlagCaptured(ETeamColor ScoringTeam)
+ATeamManager* ACTFGameMode::GetTeamManager()
 {
-    ACTFGameState* GS = GetGameState<ACTFGameState>();
-    if (GS)
-    {
-        GS->UpdateTeamScore(ScoringTeam, 1);
-    }
+	for (TActorIterator<ATeamManager> It(GetWorld()); It; ++It)
+	{
+		return *It;
+	}
+	return nullptr;
 }
 
+AActor* ACTFGameMode::ChoosePlayerStart_Implementation(AController* Player)
+{
+	//return the one with player start tag = "Default"
+
+	AActor* BestStart = nullptr;
+	for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
+	{
+		if (It->PlayerStartTag == "Default")
+		{
+			BestStart = *It;
+			break;
+		}
+	}
+	return BestStart; 
+}

@@ -29,6 +29,12 @@ void ATeamManager::BeginPlay()
 {
     Super::BeginPlay();
 
+    PopulateTeams();
+}
+
+void ATeamManager::PopulateTeams()
+{
+	TeamStartPoints.Empty();
     for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
     {
         ETeamColor TeamColor = GetTeamColorFromTag(It->PlayerStartTag);
@@ -91,6 +97,13 @@ APlayerStart* ATeamManager::GetSpawnPoint(ETeamColor TeamColor)
     {
         if (GetTeamColorFromTag(StartPoint->PlayerStartTag) == TeamColor)
         {
+            //logs all info about spawning
+			UE_LOG(LogTemp, Warning, TEXT("SpawnPoint: %s"), *StartPoint->GetName());
+			UE_LOG(LogTemp, Warning, TEXT("SpawnPoint Tag: %s"), *StartPoint->PlayerStartTag.ToString());
+			UE_LOG(LogTemp, Warning, TEXT("SpawnPoint Team: %d"), (int32)GetTeamColorFromTag(StartPoint->PlayerStartTag));
+			UE_LOG(LogTemp, Warning, TEXT("SpawnPoint Player Start Tag: %s"), *StartPoint->PlayerStartTag.ToString());
+            //current role net
+
             return StartPoint;
         }
     }

@@ -67,7 +67,6 @@ protected:
 	/** Movement and Look Functions */
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
-	void ChangeTeam();
 
 	/** RPCs for Team Material Handling */
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -125,6 +124,8 @@ public:
 	void SetWeapon(AActor* NewWeapon);
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	void RespawnAtTeamStart();
 
 	/** Team Material Handling */
 	UFUNCTION(BlueprintCallable, Category = "Team")

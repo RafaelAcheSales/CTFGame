@@ -61,15 +61,17 @@ void ACTFGameProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
                     HitCharacter->TakeDamage(20.0f, FDamageEvent(), GetOwner()->GetInstigatorController(), this);
                     UE_LOG(LogTemp, Warning, TEXT("Hit %s"), *HitCharacter->GetName());
                 }
+                Destroy();
             }
         }
 
         if (OtherComp->IsSimulatingPhysics())
         {
             OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
+            Destroy();
         }
 
-        Destroy();
+       
     }
 }
 

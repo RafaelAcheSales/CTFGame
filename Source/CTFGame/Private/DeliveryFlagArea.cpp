@@ -4,12 +4,13 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"
 #include "CTFGameState.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ADeliveryFlagArea::ADeliveryFlagArea()
 {
-    // Enable ticking if needed
     PrimaryActorTick.bCanEverTick = false;
+    bReplicates = true;
 
     // Create and set up TriggerBox component
     TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
@@ -20,46 +21,40 @@ ADeliveryFlagArea::ADeliveryFlagArea()
     TriggerBox->SetCollisionObjectType(ECC_WorldDynamic);
     TriggerBox->SetCollisionResponseToAllChannels(ECR_Ignore);
     TriggerBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-    // Bind overlap events
     TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &ADeliveryFlagArea::OnOverlapBegin);
     TriggerBox->OnComponentEndOverlap.AddDynamic(this, &ADeliveryFlagArea::OnOverlapEnd);
 
-	// Create and set up StationMesh component
-	StationMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StationMesh"));
-	StationMesh->SetupAttachment(RootComponent);
-
-
+    // Create and set up StationMesh component
+    StationMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StationMesh"));
+    StationMesh->SetupAttachment(RootComponent);
 }
 
-// Called when the game starts or when spawned
 void ADeliveryFlagArea::BeginPlay()
 {
     Super::BeginPlay();
-    Flag = Cast<AFlag>(UGameplayStatics::GetActorOfClass(GetWorld(), AFlag::StaticClass()));
-    if (Flag == nullptr) {
-        UE_LOG(LogTemp, Error, TEXT("Flag obj not found by delivery area"));
-    }
-}
-
-// Handle flag delivery when an actor enters the area
-void ADeliveryFlagArea::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-    bool bFromSweep, const FHitResult& SweepResult)
-{
-    if (OtherActor)
+    if (HasAuthority())
     {
-        UE_LOG(LogTemp, Warning, TEXT("%s entered the flag delivery area!"), *OtherActor->GetName());
-        ACTFGameCharacter* ScoringPlayer = Cast<ACTFGameCharacter>(OtherActor);
-        if (ScoringPlayer) 
+        Flag = Cast<AFlag>(UGameplayStatics::GetActorOfClass(GetWorld(), AFlag::StaticClass()));
+        if (!Flag)
         {
-            if (ScoringPlayer->GetHasFlag()) {
-                DeliverFlag(ScoringPlayer);
-            }
+            UE_LOG(LogTemp, Error, TEXT("Flag object not found by delivery area"));
         }
     }
 }
 
-// Handle when an actor leaves the trigger area
+void ADeliveryFlagArea::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+    bool bFromSweep, const FHitResult& SweepResult)
+{
+    if (!HasAuthority()) return;
+
+    ACTFGameCharacter* ScoringPlayer = Cast<ACTFGameCharacter>(OtherActor);
+    if (ScoringPlayer && ScoringPlayer->GetHasFlag())
+    {
+        ServerDeliverFlag(ScoringPlayer);
+    }
+}
+
 void ADeliveryFlagArea::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
@@ -69,21 +64,39 @@ void ADeliveryFlagArea::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, A
     }
 }
 
-// Process flag delivery (customize as needed)
-void ADeliveryFlagArea::DeliverFlag(AActor* ActorDelivering)
+void ADeliveryFlagArea::ServerDeliverFlag_Implementation(AActor* ActorDelivering)
+{
+    if (ActorDelivering && HasAuthority())
+    {
+        MulticastDeliverFlag(ActorDelivering);
+        if (Flag)
+        {
+            Flag->Respawn();
+        }
+    }
+}
+
+bool ADeliveryFlagArea::ServerDeliverFlag_Validate(AActor* ActorDelivering)
+{
+    return true;
+}
+
+void ADeliveryFlagArea::MulticastDeliverFlag_Implementation(AActor* ActorDelivering)
 {
     if (ActorDelivering)
     {
-        // Get game state
-		ACTFGameState* GameState = Cast<ACTFGameState>(GetWorld()->GetGameState());
+        ACTFGameState* GameState = GetWorld()->GetGameState<ACTFGameState>();
         if (GameState)
         {
             GameState->UpdateTeamScore(Team, 1);
             UE_LOG(LogTemp, Warning, TEXT("%s delivered the flag to the base!"), *ActorDelivering->GetName());
-            // Get flag.respawn it
-            //Flag->Drop();
-            Flag->Respawn();
 
         }
     }
+}
+
+void ADeliveryFlagArea::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(ADeliveryFlagArea, Flag);
 }

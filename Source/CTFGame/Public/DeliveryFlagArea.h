@@ -1,3 +1,5 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -35,14 +37,26 @@ public:
         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
     // Function to handle flag delivery logic
+    UFUNCTION(Server, Reliable, WithValidation)
+    void ServerDeliverFlag(AActor* ActorDelivering);
+    void ServerDeliverFlag_Implementation(AActor* ActorDelivering);
+    bool ServerDeliverFlag_Validate(AActor* ActorDelivering);
+
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastDeliverFlag(AActor* ActorDelivering);
+    void MulticastDeliverFlag_Implementation(AActor* ActorDelivering);
+
     void DeliverFlag(AActor* ActorDelivering);
 
-	//MEsh for station
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UStaticMeshComponent* StationMesh;
+    // Mesh for station
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UStaticMeshComponent* StationMesh;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Team")
-	ETeamColor Team;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Team")
+    ETeamColor Team;
 
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     AFlag* Flag;
+
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

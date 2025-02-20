@@ -92,8 +92,6 @@ void ACTFGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACTFGameCharacter::Look);
 
-		// Change Team
-		EnhancedInputComponent->BindAction(ChangeTeamAction, ETriggerEvent::Triggered, this, &ACTFGameCharacter::ChangeTeam);
 	}
 }
 
@@ -113,7 +111,7 @@ void ACTFGameCharacter::BeginPlay()
 
 	//Register timer to call UpdateTeamMaterial every 3 seconds
 
-	GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &ACTFGameCharacter::UpdateTeamMaterial, 3.0f, true);
+	GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &ACTFGameCharacter::UpdateTeamMaterial, 3.0f, false);
 }
 
 void ACTFGameCharacter::Move(const FInputActionValue& Value)
@@ -138,18 +136,68 @@ void ACTFGameCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void ACTFGameCharacter::ChangeTeam()
-{
-
-}
-
 
 void ACTFGameCharacter::UpdateTeamMaterial()
 {
 	ACTFPlayerState* MyPlayerState = GetPlayerState<ACTFPlayerState>();
 	if (!MyPlayerState) return;
 
+
+
 	SetTeamMaterial(MyPlayerState->GetTeam());
+}
+
+
+void ACTFGameCharacter::RespawnAtTeamStart()
+{
+	// Ensure we’re on the server if this is a networked game
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	// Sanity check: you must have a valid PlayerState that knows its team
+	ACTFPlayerState* MyPlayerState = GetPlayerState<ACTFPlayerState>();
+	if (!MyPlayerState)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No valid PlayerState found on this character."));
+		return;
+	}
+
+	// Find the TeamManager in the world
+	ATeamManager* TeamManager = Cast<ATeamManager>(
+		UGameplayStatics::GetActorOfClass(GetWorld(), ATeamManager::StaticClass())
+	);
+	if (!TeamManager)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No ATeamManager found in the world."));
+		return;
+	}
+
+	// Get the spawn point for this player’s team
+	APlayerStart* MySpawnPoint = TeamManager->GetSpawnPoint(MyPlayerState->GetTeam());
+	if (!MySpawnPoint)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No spawn point returned for team %d."), MyPlayerState->GetTeam());
+		return;
+	}
+
+	// Teleport the character (location + rotation). 
+	// TeleportTo handles potential collision better than SetActorLocation for many Pawns.
+	TeleportTo(
+		MySpawnPoint->GetActorLocation(),
+		MySpawnPoint->GetActorRotation()
+	);
+
+	//log rotation
+
+	UE_LOG(LogTemp, Warning, TEXT("Rotation: %s"), *MySpawnPoint->GetActorRotation().ToString());
+
+	// Now force the Controller's rotation to match
+	if (AController* MyController = GetController())
+	{
+		MyController->SetControlRotation(MySpawnPoint->GetActorRotation());
+	}
 }
 
 void ACTFGameCharacter::SetTeamMaterial(ETeamColor Team)

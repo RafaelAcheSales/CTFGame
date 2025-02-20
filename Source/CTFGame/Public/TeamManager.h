@@ -5,6 +5,7 @@
 #include "TeamColors.h"
 #include "GameFramework/PlayerState.h"
 #include "GameFramework/PlayerStart.h"
+#include "GameFramework/GameMode.h"
 #include "Net/UnrealNetwork.h"
 #include "TeamManager.generated.h"
 
@@ -36,7 +37,11 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Teams")
     APlayerStart* GetSpawnPoint(ETeamColor TeamColor);
 
+    void PopulateTeams();
+
 protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+    
     virtual void BeginPlay() override;
 };

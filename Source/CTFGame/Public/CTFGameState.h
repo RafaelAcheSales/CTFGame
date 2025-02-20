@@ -25,7 +25,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdated, const TArray<FTeamS
  * 
  */
 UCLASS()
-class CTFGAME_API ACTFGameState : public AGameState
+class CTFGAME_API ACTFGameState : public AGameStateBase
 {
 	GENERATED_BODY()
 	
