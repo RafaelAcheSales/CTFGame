@@ -36,6 +36,10 @@ public:
     UPROPERTY(BlueprintAssignable, Category = "Score")
     FOnScoreUpdated OnScoreUpdatedEvent;
 
+    // Multicast function to show the end-game UI on all machines
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastShowEndGameUI(ETeamColor WinningTeamID);
+
     UFUNCTION()
     void OnRep_Score();
 
