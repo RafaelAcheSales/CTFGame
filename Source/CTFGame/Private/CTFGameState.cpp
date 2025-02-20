@@ -41,16 +41,16 @@ void ACTFGameState::MulticastShowEndGameUI_Implementation(ETeamColor WinningTeam
     UE_LOG(LogTemp, Warning, TEXT("Team %d won the game! (UI shown on all clients)"), static_cast<uint8>(WinningTeamID));
 
     // Example pseudo-code (if using UMG):
-    APlayerController* PC = GetWorld()->GetFirstPlayerController();
-    if (PC && EndGameWidgetClass)
-    {
-        UYourEndGameWidget* Widget = CreateWidget<UYourEndGameWidget>(PC, EndGameWidgetClass);
-        if (Widget)
-        {
-            Widget->Setup(WinningTeamID);
-            Widget->AddToViewport();
-        }
-    }
+    //APlayerController* PC = GetWorld()->GetFirstPlayerController();
+    //if (PC && EndGameWidgetClass)
+    //{
+    //    UYourEndGameWidget* Widget = CreateWidget<UYourEndGameWidget>(PC, EndGameWidgetClass);
+    //    if (Widget)
+    //    {
+    //        Widget->Setup(WinningTeamID);
+    //        Widget->AddToViewport();
+    //    }
+    //}
     
 }
 
