@@ -1,4 +1,5 @@
 #include "DeliveryFlagArea.h"
+#include "../CTFGameCharacter.h"
 #include "GameFramework/Actor.h"
 #include "Engine/Engine.h"
 #include "CTFGameState.h"
@@ -43,7 +44,11 @@ void ADeliveryFlagArea::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent,
     if (OtherActor)
     {
         UE_LOG(LogTemp, Warning, TEXT("%s entered the flag delivery area!"), *OtherActor->GetName());
-        DeliverFlag(OtherActor);
+        ACTFGameCharacter* ScoringPlayer = Cast<ACTFGameCharacter>(OtherActor);
+        if (ScoringPlayer) 
+        {
+            
+        }
     }
 }
 

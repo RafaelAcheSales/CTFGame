@@ -39,6 +39,7 @@ public:
     UFUNCTION()
     void OnRep_Score();
 
+    UFUNCTION(BlueprintCallable, Category = "Score")
     void UpdateTeamScore(ETeamColor TeamID, int32 Points);
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
