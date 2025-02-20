@@ -65,30 +65,44 @@ void AFlag::AttachToPlayer(ACTFGameCharacter* Player)
     {
         AttachToComponent(Player->GetMesh3P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("FlagSocket"));
         SetOwner(Player);
+        Player->SetHeldFlag(this); // Store flag reference in the player
         UE_LOG(LogTemp, Warning, TEXT("Flag attached to player: %s"), *Player->GetName());
-        //Disable overlapp event
+
+        // Disable overlap event
         CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         Player->SetHasFlag(true);
     }
 }
+
 
 void AFlag::Drop()
 {
     ACTFGameCharacter* Player = Cast<ACTFGameCharacter>(GetOwner());
     if (Player) {
         Player->SetHasFlag(false);
+        Player->SetHeldFlag(nullptr); // Clear reference in player
     }
+
     DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-    //reset rotation
-    SetActorRotation(FRotator(0.f, 0.f, 0.f),ETeleportType::ResetPhysics);
-    //set spawn height only
+    SetActorRotation(FRotator(0.f, 0.f, 0.f), ETeleportType::ResetPhysics);
     SetActorLocation(FVector(GetActorLocation().X, GetActorLocation().Y, SpawnLocation.Z));
-    
+
     SetOwner(nullptr);
     UE_LOG(LogTemp, Warning, TEXT("Flag dropped!"));
-    //Enable overlapp event
-    CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+
+    // Temporarily disable collision
+    CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    // Re-enable collision after a short delay (e.g., 1 second)
+    GetWorldTimerManager().SetTimer(CollisionEnableTimer, this, &AFlag::EnableCollision, 1.0f, false);
 }
+
+void AFlag::EnableCollision()
+{
+    CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    UE_LOG(LogTemp, Warning, TEXT("Flag collision re-enabled!"));
+}
+
 
 void AFlag::Respawn()
 {

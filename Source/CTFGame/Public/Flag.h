@@ -36,6 +36,8 @@ public:
 	//Drop the flag
 	void Drop();
 
+	void EnableCollision();
+
 	//Respawn the flag
 	void Respawn();
 
@@ -45,6 +47,8 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	FTimerHandle CollisionEnableTimer;
 
 	// Save position for respawn
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")

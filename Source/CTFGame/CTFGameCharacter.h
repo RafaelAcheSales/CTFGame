@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "TeamColors.h"
+#include "Flag.h"
 #include "CTFGameCharacter.generated.h"
 
 class UInputComponent;
@@ -62,7 +63,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
 	bool HasFlag;
 
-
+	AFlag* HeldFlag;  // Reference to the flag the player is holding
 	/** Movement and Look Functions */
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
@@ -84,8 +85,11 @@ protected:
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 
 public:
+
 	ACTFGameCharacter();
 
+	void SetHeldFlag(AFlag* NewFlag);
+	void DropHeldFlag();
 	/** Health Properties */
 	UPROPERTY(ReplicatedUsing = OnRep_Health)
 	float Health;

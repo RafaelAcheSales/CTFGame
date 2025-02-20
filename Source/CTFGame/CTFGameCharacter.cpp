@@ -231,6 +231,7 @@ void ACTFGameCharacter::OnRep_Health()
 	UE_LOG(LogTemp, Warning, TEXT("Health Updated on Client: %f"), Health);
 
 }
+
 float ACTFGameCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	float DamageApplied = FMath::Min(Health, Damage);
@@ -242,11 +243,10 @@ float ACTFGameCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEven
 	{
 		if (HasAuthority())
 		{
-			//Drop Flag
-			if (GetHasFlag()) {
+			// Drop the flag if the player is holding one
+			DropHeldFlag();
 
-			}
-			// Find the Team Manager
+			// Find the Team Manager for respawn logic
 			ATeamManager* TeamManager = nullptr;
 			for (TActorIterator<ATeamManager> It(GetWorld()); It; ++It)
 			{
@@ -256,7 +256,6 @@ float ACTFGameCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEven
 
 			if (TeamManager)
 			{
-				// Get the player's team color
 				ACTFPlayerState* PS = GetPlayerState<ACTFPlayerState>();
 				if (PS)
 				{
@@ -277,6 +276,19 @@ float ACTFGameCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEven
 }
 
 
+void ACTFGameCharacter::SetHeldFlag(AFlag* NewFlag)
+{
+	HeldFlag = NewFlag;
+}
+
+void ACTFGameCharacter::DropHeldFlag()
+{
+	if (HeldFlag)
+	{
+		HeldFlag->Drop();
+		HeldFlag = nullptr; // Clear reference after dropping
+	}
+}
 
 AActor* ACTFGameCharacter::GetWeapon() const
 {
