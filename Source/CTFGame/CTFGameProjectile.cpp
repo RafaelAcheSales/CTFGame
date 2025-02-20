@@ -38,8 +38,7 @@ ACTFGameProjectile::ACTFGameProjectile()
 
 void ACTFGameProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-    // Ensure only the Autonomous Proxy (Owner Client) processes the hit
-    if (GetOwner()->GetLocalRole() != ROLE_AutonomousProxy) return;
+    if (!HasAuthority()) return; // Only process on the server
 
     if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
     {
@@ -51,15 +50,16 @@ void ACTFGameProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
 
             if (ProjectileOwnerPlayerState && HitPlayerState)
             {
+                UE_LOG(LogTemp, Warning, TEXT("%d hittng team: %d!"), ProjectileOwnerPlayerState->GetTeam(), HitPlayerState->GetTeam());
                 if (ProjectileOwnerPlayerState->GetTeam() == HitPlayerState->GetTeam())
                 {
                     UE_LOG(LogTemp, Warning, TEXT("Friendly Fire!"));
                 }
                 else
                 {
-                    // Apply damage only once
+                    // Apply damage only on the Server
                     HitCharacter->TakeDamage(20.0f, FDamageEvent(), GetOwner()->GetInstigatorController(), this);
-					UE_LOG(LogTemp, Warning, TEXT("Hit %s"), *HitCharacter->GetName());
+                    UE_LOG(LogTemp, Warning, TEXT("Hit %s"), *HitCharacter->GetName());
                 }
             }
         }
@@ -72,3 +72,4 @@ void ACTFGameProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
         Destroy();
     }
 }
+

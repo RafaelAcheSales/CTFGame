@@ -12,8 +12,8 @@ ATeamManager::ATeamManager()
     // Inicializa os times disponíveis
     TeamColors.Add(ETeamColor::Red);
     TeamColors.Add(ETeamColor::Blue);
-    //TeamColors.Add(ETeamColor::Yellow);
-    //TeamColors.Add(ETeamColor::Green);
+    // TeamColors.Add(ETeamColor::Yellow);
+    // TeamColors.Add(ETeamColor::Green);
 }
 
 ETeamColor GetTeamColorFromTag(const FName& Tag)
@@ -38,11 +38,6 @@ void ATeamManager::BeginPlay()
             TeamStartPoints.Add(*It);
         }
     }
-
-	//reorder based on team color
-	TeamStartPoints.Sort([](const APlayerStart& A, const APlayerStart& B) {
-		return GetTeamColorFromTag(A.PlayerStartTag) < GetTeamColorFromTag(B.PlayerStartTag);
-		});
 }
 
 void ATeamManager::AssignPlayerToTeam(APlayerState* PlayerState)
@@ -50,15 +45,12 @@ void ATeamManager::AssignPlayerToTeam(APlayerState* PlayerState)
     if (!HasAuthority() || !PlayerState) return;
 
     ACTFPlayerState* PS = Cast<ACTFPlayerState>(PlayerState);
-    ETeamColor AssignedTeam;
     if (PS)
     {
-        AssignedTeam = GetBalancedTeam();
+        ETeamColor AssignedTeam = GetBalancedTeam();
         PS->SetTeam(AssignedTeam);
-
         TeamPlayers.Add(PlayerState);
     }
-
 }
 
 ETeamColor ATeamManager::GetBalancedTeam()
@@ -93,13 +85,23 @@ ETeamColor ATeamManager::GetBalancedTeam()
     return BestTeam;
 }
 
+APlayerStart* ATeamManager::GetSpawnPoint(ETeamColor TeamColor)
+{
+    for (APlayerStart* StartPoint : TeamStartPoints)
+    {
+        if (GetTeamColorFromTag(StartPoint->PlayerStartTag) == TeamColor)
+        {
+            return StartPoint;
+        }
+    }
+    return nullptr;
+}
+
 void ATeamManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(ATeamManager, TeamColors);
     DOREPLIFETIME(ATeamManager, TeamPlayers);
-	DOREPLIFETIME(ATeamManager, TeamStartPoints);
+    DOREPLIFETIME(ATeamManager, TeamStartPoints);
 }
-
-

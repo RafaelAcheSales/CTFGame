@@ -14,96 +14,84 @@
 UCTFGameWeaponComponent::UCTFGameWeaponComponent()
 {
     SetIsReplicated(true);
-
-    // Default offset from the character location for projectiles to spawn
     MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 }
 
 void UCTFGameWeaponComponent::Fire()
 {
-    // If we’re a client (or non-authority), call the Server function:
-    // The server will do the actual projectile spawn.
-    if (!GetOwner() || !GetOwner()->HasAuthority())
+    if (GetOwner() && GetOwner()->HasAuthority())
     {
-        ServerFire();
+        ServerFire_Implementation(); // Call directly if server
     }
     else
     {
-        // If we **are** the server already, just call directly
-        ServerFire();
+        ServerFire(); // Call via RPC if client
     }
 }
 
 void UCTFGameWeaponComponent::ServerFire_Implementation()
 {
-    // Validate we have a character + controller
-    if (!Character || !Character->GetController())
+    if (!Character || !Character->GetController() || !ProjectileClass)
     {
         return;
     }
 
-    // *** SPAWN THE PROJECTILE ON THE SERVER ***
-    if (ProjectileClass)
+    UWorld* World = GetWorld();
+    if (!World)
     {
-        UWorld* const World = GetWorld();
-        if (World)
-        {
-            APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
-            if (PlayerController)
-            {
-                // Determine spawn transform from camera rotation + MuzzleOffset
-                const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-                const FVector SpawnLocation = Character->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
-
-                FActorSpawnParameters ActorSpawnParams;
-                ActorSpawnParams.SpawnCollisionHandlingOverride =
-                    ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-                ActorSpawnParams.Owner = Character; // helps with damage ownership, etc.
-
-                // Actually spawn the projectile
-                World->SpawnActor<ACTFGameProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-            }
-        }
+        return;
     }
 
-    // *** Tell everyone (including the Server) to play the sound/animation ***
+    APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
+    if (!PlayerController || !PlayerController->PlayerCameraManager)
+    {
+        return;
+    }
+
+    FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
+    FVector SpawnLocation = Character->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
+
+    FActorSpawnParameters ActorSpawnParams;
+    ActorSpawnParams.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+    ActorSpawnParams.Owner = Character;
+
+    World->SpawnActor<ACTFGameProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+
     MulticastFireEffects();
 }
 
 bool UCTFGameWeaponComponent::ServerFire_Validate()
 {
-    // You can do any security checks here.
-    // Return false if you want to reject the call.
     return true;
 }
 
 void UCTFGameWeaponComponent::MulticastFireEffects_Implementation()
 {
-    // If a FireSound is set, play it at the weapon’s (or Character’s) location
     if (FireSound)
     {
         UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetComponentLocation());
     }
 
-    // Attempt to play the firing animation. Each client can do its own logic
-    // about which mesh (1P or 3P) to play on. If you only want local players
-    // to see the 1P arms montage, do an IsLocallyControlled() check.
-    if (FireAnimation && Character)
+    if (!Character || !FireAnimation)
     {
-        if (Character->IsLocallyControlled())
+        return;
+    }
+
+    if (Character->IsLocallyControlled())
+    {
+        UAnimInstance* AnimInstance = Character->GetMesh1P()->GetAnimInstance();
+        if (AnimInstance)
         {
-            // Use the 1P mesh
-            UAnimInstance* AnimInstance = Character->GetMesh1P()->GetAnimInstance();
-            if (AnimInstance)
-            {
-                AnimInstance->Montage_Play(FireAnimation, 1.f);
-            }
+            AnimInstance->Montage_Play(FireAnimation, 1.f);
         }
-        else
+    }
+    else
+    {
+        UAnimInstance* AnimInstance = Character->GetMesh3P()->GetAnimInstance();
+        if (AnimInstance)
         {
-            // Optionally play on 3P mesh for other clients, if you have a 3P montage
-            UAnimInstance* AnimInstance = Character->GetMesh3P()->GetAnimInstance();
-            // AnimInstance->Montage_Play(FireAnimation, 1.f);
+            AnimInstance->Montage_Play(FireAnimation, 1.f);
         }
     }
 }
@@ -113,8 +101,7 @@ bool UCTFGameWeaponComponent::AttachWeapon(ACTFGameCharacter* TargetCharacter)
     Character = TargetCharacter;
     UE_LOG(LogTemp, Warning, TEXT("AttachWeapon() called to character %s"), *Character->GetName());
 
-    // Check that the character is valid, and has no weapon component yet
-    if (!Character || Character->GetInstanceComponents().FindItemByClass<UCTFGameWeaponComponent>())
+    if (!Character || Character->FindComponentByClass<UCTFGameWeaponComponent>())
     {
         return false;
     }
@@ -122,7 +109,6 @@ bool UCTFGameWeaponComponent::AttachWeapon(ACTFGameCharacter* TargetCharacter)
     Character->SetWeapon(GetOwner());
     GetOwner()->SetOwner(Character);
 
-    // Attach the weapon to the appropriate mesh
     FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 
     ENetRole CurrentRole = Character->GetLocalRole();
@@ -131,15 +117,12 @@ bool UCTFGameWeaponComponent::AttachWeapon(ACTFGameCharacter* TargetCharacter)
     if (CurrentRole == ROLE_AutonomousProxy)
     {
         AttachToComponent(Character->GetMesh1P(), AttachmentRules, FName(TEXT("GripPoint")));
-        UE_LOG(LogTemp, Warning, TEXT("AttachWeapon() attached to 1P mesh for %s"), *Character->GetName());
     }
     else if (CurrentRole == ROLE_SimulatedProxy)
     {
         AttachToComponent(Character->GetMesh3P(), AttachmentRules, FName(TEXT("GripPoint")));
-        UE_LOG(LogTemp, Warning, TEXT("AttachWeapon() attached to 3P mesh for %s"), *Character->GetName());
     }
 
-    // Set up action bindings
     if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
     {
         if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
@@ -157,10 +140,8 @@ bool UCTFGameWeaponComponent::AttachWeapon(ACTFGameCharacter* TargetCharacter)
     return true;
 }
 
-
-void UCTFGameWeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void UCTFGameWeaponComponent::DetachWeapon()
 {
-    // Remove the input mapping context if needed
     if (Character)
     {
         if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
@@ -171,7 +152,18 @@ void UCTFGameWeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
                 Subsystem->RemoveMappingContext(FireMappingContext);
             }
         }
+        Character = nullptr;
     }
+}
 
+void UCTFGameWeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    DetachWeapon();
     Super::EndPlay(EndPlayReason);
+}
+
+void UCTFGameWeaponComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(UCTFGameWeaponComponent, MuzzleOffset);
 }

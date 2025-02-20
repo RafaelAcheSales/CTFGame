@@ -4,6 +4,8 @@
 #include "GameFramework/Actor.h"
 #include "TeamColors.h"
 #include "GameFramework/PlayerState.h"
+#include "GameFramework/PlayerStart.h"
+#include "Net/UnrealNetwork.h"
 #include "TeamManager.generated.h"
 
 UCLASS()
@@ -21,8 +23,8 @@ protected:
     UPROPERTY(Replicated)
     TArray<APlayerState*> TeamPlayers;
 
-	UPROPERTY(Replicated)
-	TArray<APlayerStart*> TeamStartPoints;
+    UPROPERTY(Replicated)
+    TArray<APlayerStart*> TeamStartPoints;
 
 public:
     UFUNCTION(BlueprintCallable, Category = "Teams")
@@ -31,8 +33,10 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Teams")
     ETeamColor GetBalancedTeam();
 
+    UFUNCTION(BlueprintCallable, Category = "Teams")
+    APlayerStart* GetSpawnPoint(ETeamColor TeamColor);
+
 protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	virtual void BeginPlay() override;
+    virtual void BeginPlay() override;
 };

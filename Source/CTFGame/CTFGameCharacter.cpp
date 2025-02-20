@@ -11,9 +11,11 @@
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "TeamManager.h"
+#include "EngineUtils.h"
 #include "Engine/LocalPlayer.h"
 #include "CTFPlayerState.h"  // Include the PlayerState header
 #include "GameFramework/PlayerStart.h"
+#include <Net/UnrealNetwork.h>
 #include <Components/WidgetComponent.h>
 
 
@@ -138,17 +140,7 @@ void ACTFGameCharacter::Look(const FInputActionValue& Value)
 
 void ACTFGameCharacter::ChangeTeam()
 {
-	//ACTFPlayerState* MyPlayerState = GetPlayerState<ACTFPlayerState>();
-	//if (!MyPlayerState) return;
 
-	//// Toggle team and update PlayerState
-	////ETeamColor NewTeam = (MyPlayerState->GetTeam() == ETeamColor::Red) ? ETeamColor::Blue : ETeamColor::Red;
-	////MyPlayerState->SetTeam(NewTeam);
-
-	//// Apply new team material
-	//UpdateTeamMaterial();	
-
-	////UE_LOG(LogTemplateCharacter, Warning, TEXT("Changed team to %s"), (NewTeam == ETeamColor::Red) ? TEXT("Red") : TEXT("Blue"));
 }
 
 
@@ -234,7 +226,11 @@ void ACTFGameCharacter::Multicast_SetTeamMaterial_Implementation(ETeamColor Team
 }
 
 
+void ACTFGameCharacter::OnRep_Health()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Health Updated on Client: %f"), Health);
 
+}
 float ACTFGameCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	float DamageApplied = FMath::Min(Health, Damage);
@@ -244,65 +240,40 @@ float ACTFGameCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEven
 
 	if (Health <= 0)
 	{
-		HandleDeath();
+		if (HasAuthority())
+		{
+			//Drop Flag
+			if (GetHasFlag()) {
+
+			}
+			// Find the Team Manager
+			ATeamManager* TeamManager = nullptr;
+			for (TActorIterator<ATeamManager> It(GetWorld()); It; ++It)
+			{
+				TeamManager = *It;
+				break;
+			}
+
+			if (TeamManager)
+			{
+				// Get the player's team color
+				ACTFPlayerState* PS = GetPlayerState<ACTFPlayerState>();
+				if (PS)
+				{
+					APlayerStart* MySpawnPoint = TeamManager->GetSpawnPoint(PS->GetTeam());
+					if (MySpawnPoint)
+					{
+						SetActorLocation(MySpawnPoint->GetActorLocation());
+					}
+				}
+			}
+
+			// Reset health after respawn
+			Health = MaxHealth;
+		}
 	}
 
 	return DamageApplied;
-}
-
-void ACTFGameCharacter::HandleDeath()
-{
-	UE_LOG(LogTemp, Warning, TEXT("%s has died!"), *GetName());
-
-		if (DeathAnimation) PlayAnimMontage(DeathAnimation);
-
-
-	//dea
-
-	GetCharacterMovement()->DisableMovement();
-	//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &ACTFGameCharacter::Respawn, RespawnDelay, false);
-}
-
-void ACTFGameCharacter::Respawn()
-{
-	RestoreCharacter();
-
-	// 
-	
-	//if (GetLocalRole() == ROLE_AutonomousProxy && SpawnPoint)
-	//{
-	//	SetActorLocationAndRotation(SpawnPoint->GetActorLocation(), SpawnPoint->GetActorRotation());
-	//}
-
-
-	UE_LOG(LogTemp, Warning, TEXT("%s has respawned!"), *GetName());
-}
-
-void ACTFGameCharacter::RestoreCharacter()
-{
-	Health = MaxHealth;
-
-	//if (AController* PlayerController = GetController())
-	//{
-	//	PlayerController->EnableInput(nullptr);
-	//}
-
-	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-	if (SpawnPoint)
-	{
-		SetActorLocation(SpawnPoint->GetActorLocation());
-		SetActorRotation(SpawnPoint->GetActorRotation());
-	}
-	//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-}
-
-void ACTFGameCharacter::RespawnAtSpawnPoint()
-{
-	
-
-
 }
 
 
@@ -312,7 +283,13 @@ AActor* ACTFGameCharacter::GetWeapon() const
 	return Weapon;
 }
 
-	void ACTFGameCharacter::SetWeapon(AActor* NewWeapon)
+void ACTFGameCharacter::SetWeapon(AActor* NewWeapon)
 {
 	Weapon = NewWeapon;
+}
+void ACTFGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ACTFGameCharacter, Health);
+	DOREPLIFETIME(ACTFGameCharacter, MaxHealth);
 }

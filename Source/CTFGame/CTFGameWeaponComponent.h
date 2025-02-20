@@ -36,7 +36,7 @@ public:
 	UAnimMontage* FireAnimation;
 
 	/** Gun muzzle's offset from the character's location (in camera space) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	UPROPERTY(Replicated);
 	FVector MuzzleOffset;
 
 	/** MappingContext for input */
@@ -58,6 +58,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	bool AttachWeapon(ACTFGameCharacter* TargetCharacter);
 
+	void DetachWeapon();
+
 	/** Called on the local client when the fire input is triggered */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void Fire();
@@ -66,6 +68,9 @@ protected:
 
 	/** Ends gameplay for this component */
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 
 	/**
 	 * Server RPC for spawning the projectile.

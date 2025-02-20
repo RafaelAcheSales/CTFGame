@@ -87,10 +87,12 @@ public:
 	ACTFGameCharacter();
 
 	/** Health Properties */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
+	UPROPERTY(ReplicatedUsing = OnRep_Health)
 	float Health;
+	UFUNCTION()
+	void OnRep_Health();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
+	UPROPERTY(Replicated)
 	float MaxHealth;
 
 	//RespawnTimerHandle
@@ -107,10 +109,6 @@ public:
 	/** Damage Handling */
 	virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
-	void HandleDeath();
-	void Respawn();
-	void RestoreCharacter();
-	void RespawnAtSpawnPoint();
 	void UpdateTeamMaterial();
 
 	/** Mesh and Camera Getters */
@@ -121,6 +119,8 @@ public:
 	/** Weapon Handling */
 	AActor* GetWeapon() const;
 	void SetWeapon(AActor* NewWeapon);
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/** Team Material Handling */
 	UFUNCTION(BlueprintCallable, Category = "Team")
