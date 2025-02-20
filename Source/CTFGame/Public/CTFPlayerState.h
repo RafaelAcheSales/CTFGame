@@ -4,9 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "Delegates/Delegate.h"
 #include "TeamColors.h"
 #include "CTFPlayerState.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTeamChanged, ETeamColor, NewTeam);
 /**
  *
  */
@@ -18,6 +21,8 @@ class CTFGAME_API ACTFPlayerState : public APlayerState
 
 public:
     ACTFPlayerState();
+    UPROPERTY(BlueprintAssignable,Category = "Team")
+    FOnTeamChanged OnTeamChanged;
 
 protected:
     UPROPERTY(ReplicatedUsing = OnRep_Team, VisibleAnywhere, BlueprintReadOnly, Category = "Team")

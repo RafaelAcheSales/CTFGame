@@ -34,6 +34,7 @@ void ACTFPlayerState::OnRep_Team()
         if (ACTFGameCharacter* Character = Cast<ACTFGameCharacter>(PlayerPawn))
         {
             Character->UpdateTeamMaterial();
+            OnTeamChanged.Broadcast(Team);
         }
     }
 }

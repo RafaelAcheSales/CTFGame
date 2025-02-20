@@ -78,9 +78,6 @@ protected:
 	void Multicast_SetTeamMaterial(ETeamColor Team);
 	void Multicast_SetTeamMaterial_Implementation(ETeamColor Team);
 
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastOnDeath();
-	void MulticastOnDeath_Implementation();
 
 	/** APawn Interface Overrides */
 	virtual void NotifyControllerChanged() override;
@@ -109,10 +106,8 @@ public:
 
 	/** Damage Handling */
 	virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
 	void HandleDeath();
-	void PlayDeathAnimation();
-	void DisableCharacter();
-	void StartRespawnTimer();
 	void Respawn();
 	void RestoreCharacter();
 	void RespawnAtSpawnPoint();

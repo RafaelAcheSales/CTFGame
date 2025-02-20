@@ -244,57 +244,38 @@ float ACTFGameCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEven
 
 	if (Health <= 0)
 	{
-		MulticastOnDeath_Implementation();
+		HandleDeath();
 	}
 
 	return DamageApplied;
 }
-void ACTFGameCharacter::MulticastOnDeath_Implementation()
-{
-	HandleDeath();
-}
+
 void ACTFGameCharacter::HandleDeath()
 {
 	UE_LOG(LogTemp, Warning, TEXT("%s has died!"), *GetName());
 
-	PlayDeathAnimation();
-	//DisableCharacter();
-	//StartRespawnTimer();
-}
+		if (DeathAnimation) PlayAnimMontage(DeathAnimation);
 
-void ACTFGameCharacter::PlayDeathAnimation()
-{
-	if (DeathAnimation)
-	{
-		PlayAnimMontage(DeathAnimation);
-	}
-}
 
-void ACTFGameCharacter::DisableCharacter()
-{
-	// Desativar entrada do jogador
-	AController* PlayerController = GetController();
-	if (PlayerController)
-	{
-		PlayerController->DisableInput(nullptr);
-	}
+	//dea
 
-	// Desativar movimento
 	GetCharacterMovement()->DisableMovement();
+	//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	// Remover colisão para evitar interação
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-}
-
-void ACTFGameCharacter::StartRespawnTimer()
-{
 	GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &ACTFGameCharacter::Respawn, RespawnDelay, false);
 }
 
 void ACTFGameCharacter::Respawn()
 {
 	RestoreCharacter();
-	RespawnAtSpawnPoint();
+
+	// 
+	
+	//if (GetLocalRole() == ROLE_AutonomousProxy && SpawnPoint)
+	//{
+	//	SetActorLocationAndRotation(SpawnPoint->GetActorLocation(), SpawnPoint->GetActorRotation());
+	//}
+
 
 	UE_LOG(LogTemp, Warning, TEXT("%s has respawned!"), *GetName());
 }
@@ -303,27 +284,24 @@ void ACTFGameCharacter::RestoreCharacter()
 {
 	Health = MaxHealth;
 
-	// Restaurar entrada e movimento
-	AController* PlayerController = GetController();
-	if (PlayerController)
-	{
-		PlayerController->EnableInput(nullptr);
-	}
+	//if (AController* PlayerController = GetController())
+	//{
+	//	PlayerController->EnableInput(nullptr);
+	//}
 
 	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-
-	// Restaurar colisão
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-}
-
-void ACTFGameCharacter::RespawnAtSpawnPoint()
-{
-	
 	if (SpawnPoint)
 	{
 		SetActorLocation(SpawnPoint->GetActorLocation());
 		SetActorRotation(SpawnPoint->GetActorRotation());
 	}
+	//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+}
+
+void ACTFGameCharacter::RespawnAtSpawnPoint()
+{
+	
+
 
 }
 
