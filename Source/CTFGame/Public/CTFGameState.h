@@ -21,6 +21,8 @@ struct FTeamScore
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdated, const TArray<FTeamScore>&, UpdatedTeamScores);
+// tells UI that game ended by send winning team color name from UEnumHelper
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEndGame, const FString&, WinningTeamName);
 /**
  * 
  */
@@ -35,6 +37,9 @@ public:
 
     UPROPERTY(BlueprintAssignable, Category = "Score")
     FOnScoreUpdated OnScoreUpdatedEvent;
+
+	UPROPERTY(BlueprintAssignable, Category = "EndGame")
+	FOnEndGame OnEndGameEvent;
 
     // Multicast function to show the end-game UI on all machines
     UFUNCTION(NetMulticast, Reliable)

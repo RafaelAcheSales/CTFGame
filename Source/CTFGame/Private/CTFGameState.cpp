@@ -2,6 +2,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "UEnumHelper.h"
 #include "GameFramework/GameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -36,21 +37,7 @@ void ACTFGameState::OnRep_Score()
 
 void ACTFGameState::MulticastShowEndGameUI_Implementation(ETeamColor WinningTeamID)
 {
-    // This runs on ALL machines (server + clients).
-    // Show "Team X Won!" in your UI. Implementation depends on your UI setup.
-    UE_LOG(LogTemp, Warning, TEXT("Team %d won the game! (UI shown on all clients)"), static_cast<uint8>(WinningTeamID));
-
-    // Example pseudo-code (if using UMG):
-    //APlayerController* PC = GetWorld()->GetFirstPlayerController();
-    //if (PC && EndGameWidgetClass)
-    //{
-    //    UYourEndGameWidget* Widget = CreateWidget<UYourEndGameWidget>(PC, EndGameWidgetClass);
-    //    if (Widget)
-    //    {
-    //        Widget->Setup(WinningTeamID);
-    //        Widget->AddToViewport();
-    //    }
-    //}
+	OnEndGameEvent.Broadcast(UEnumHelper::EnumToString(WinningTeamID));
     
 }
 
