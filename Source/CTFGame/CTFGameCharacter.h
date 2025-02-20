@@ -58,6 +58,11 @@ private:
 protected:
 	virtual void BeginPlay() override;
 
+	//Has flag boolean
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
+	bool HasFlag;
+
+
 	/** Movement and Look Functions */
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
@@ -148,4 +153,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* DeathAnimation;
 
+
+	///////////////////////////////////////////
+	// Flag
+	///////////////////////////////////////////
+
+	UFUNCTION(BlueprintCallable)
+	bool GetHasFlag();
+
+	UFUNCTION(BlueprintCallable)
+	void SetHasFlag(bool FlagStatus);
 };

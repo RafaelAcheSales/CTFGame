@@ -1,6 +1,7 @@
 #include "DeliveryFlagArea.h"
 #include "../CTFGameCharacter.h"
 #include "GameFramework/Actor.h"
+#include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"
 #include "CTFGameState.h"
 
@@ -34,6 +35,10 @@ ADeliveryFlagArea::ADeliveryFlagArea()
 void ADeliveryFlagArea::BeginPlay()
 {
     Super::BeginPlay();
+    Flag = Cast<AFlag>(UGameplayStatics::GetActorOfClass(GetWorld(), AFlag::StaticClass()));
+    if (Flag == nullptr) {
+        UE_LOG(LogTemp, Error, TEXT("Flag obj not found by delivery area"));
+    }
 }
 
 // Handle flag delivery when an actor enters the area
@@ -47,7 +52,9 @@ void ADeliveryFlagArea::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent,
         ACTFGameCharacter* ScoringPlayer = Cast<ACTFGameCharacter>(OtherActor);
         if (ScoringPlayer) 
         {
-            
+            if (ScoringPlayer->GetHasFlag()) {
+                DeliverFlag(ScoringPlayer);
+            }
         }
     }
 }
@@ -73,6 +80,10 @@ void ADeliveryFlagArea::DeliverFlag(AActor* ActorDelivering)
         {
             GameState->UpdateTeamScore(Team, 1);
             UE_LOG(LogTemp, Warning, TEXT("%s delivered the flag to the base!"), *ActorDelivering->GetName());
+            // Get flag.respawn it
+            //Flag->Drop();
+            Flag->Respawn();
+
         }
     }
 }

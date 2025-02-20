@@ -12,8 +12,8 @@ ATeamManager::ATeamManager()
     // Inicializa os times disponíveis
     TeamColors.Add(ETeamColor::Red);
     TeamColors.Add(ETeamColor::Blue);
-    TeamColors.Add(ETeamColor::Yellow);
-    TeamColors.Add(ETeamColor::Green);
+    //TeamColors.Add(ETeamColor::Yellow);
+    //TeamColors.Add(ETeamColor::Green);
 }
 
 ETeamColor GetTeamColorFromTag(const FName& Tag)

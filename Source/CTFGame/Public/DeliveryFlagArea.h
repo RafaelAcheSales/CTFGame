@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/BoxComponent.h"
+#include "Flag.h"
 #include "TeamColors.h"
 #include "DeliveryFlagArea.generated.h"
 
@@ -42,4 +43,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Team")
 	ETeamColor Team;
+
+    AFlag* Flag;
 };

@@ -68,12 +68,22 @@ void AFlag::AttachToPlayer(ACTFGameCharacter* Player)
         UE_LOG(LogTemp, Warning, TEXT("Flag attached to player: %s"), *Player->GetName());
         //Disable overlapp event
         CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        Player->SetHasFlag(true);
     }
 }
 
 void AFlag::Drop()
 {
+    ACTFGameCharacter* Player = Cast<ACTFGameCharacter>(GetOwner());
+    if (Player) {
+        Player->SetHasFlag(false);
+    }
     DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+    //reset rotation
+    SetActorRotation(FRotator(0.f, 0.f, 0.f),ETeleportType::ResetPhysics);
+    //set spawn height only
+    SetActorLocation(FVector(GetActorLocation().X, GetActorLocation().Y, SpawnLocation.Z));
+    
     SetOwner(nullptr);
     UE_LOG(LogTemp, Warning, TEXT("Flag dropped!"));
     //Enable overlapp event
@@ -82,12 +92,19 @@ void AFlag::Drop()
 
 void AFlag::Respawn()
 {
+    ACTFGameCharacter* Player = Cast<ACTFGameCharacter>(GetOwner());
+    if (Player) {
+        Player->SetHasFlag(false);
+    }
     DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+    SetActorRotation(FRotator(0.f, 0.f, 0.f), ETeleportType::ResetPhysics);
     SetActorLocation(SpawnLocation);
     SetOwner(nullptr);
     UE_LOG(LogTemp, Warning, TEXT("Flag respawned at spawn location!"));
     //Enable overlapp event
     CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+
+
 }
 
 void AFlag::ScorePoint()

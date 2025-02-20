@@ -172,6 +172,16 @@ void ACTFGameCharacter::SetTeamMaterial(ETeamColor Team)
 	}
 }
 
+bool ACTFGameCharacter::GetHasFlag()
+{
+	return HasFlag;
+}
+
+void ACTFGameCharacter::SetHasFlag(bool FlagStatus) 
+{
+	HasFlag = FlagStatus;
+}
+
 
 void ACTFGameCharacter::Server_SetTeamMaterial_Implementation(ETeamColor Team)
 {
