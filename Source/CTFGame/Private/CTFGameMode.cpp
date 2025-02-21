@@ -7,14 +7,11 @@
 #include "GameFramework/PlayerStart.h"
 #include "CTFPlayerState.h"
 #include "Kismet/GameplayStatics.h"
-
-// Include your custom GameState
 #include "CTFGameState.h"
 
 ACTFGameMode::ACTFGameMode()
     : Super()
 {
-    // Set default pawn class (optional)
     static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(
         TEXT("/Game/FirstPerson/Blueprints/BP_FirstPersonCharacter")
     );
@@ -29,7 +26,7 @@ void ACTFGameMode::PostLogin(APlayerController* NewPlayer)
     UE_LOG(LogTemp, Warning, TEXT("PostLogin() called HasAuthority=%d"), HasAuthority());
     Super::PostLogin(NewPlayer);
 
-    // Assign the player to a team using your ATeamManager logic
+    // assign the player to a team using your ATeamManager logic
     if (ATeamManager* TeamManager = GetTeamManager())
     {
         TeamManager->AssignPlayerToTeam(NewPlayer->PlayerState);
@@ -38,7 +35,7 @@ void ACTFGameMode::PostLogin(APlayerController* NewPlayer)
 
 AActor* ACTFGameMode::ChoosePlayerStart_Implementation(AController* Player)
 {
-    // Example: find a PlayerStart tagged "Default"
+    // example: find a PlayerStart tagged "Default"
     for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
     {
         if (It->PlayerStartTag == FName("Default"))
@@ -46,7 +43,7 @@ AActor* ACTFGameMode::ChoosePlayerStart_Implementation(AController* Player)
             return *It;
         }
     }
-    // Fallback: if none found, return first Start you can
+    // fallback: if none found, return first Start you can
     return Super::ChoosePlayerStart_Implementation(Player);
 }
 
@@ -61,18 +58,18 @@ ATeamManager* ACTFGameMode::GetTeamManager()
 
 void ACTFGameMode::HandleEndMatch(ETeamColor WinningTeamID)
 {
-    // 1) Show the winning message on all clients via GameState
+    //show the winning message on all clients via GameState
     if (ACTFGameState* GS = GetGameState<ACTFGameState>())
     {
         GS->MulticastShowEndGameUI(WinningTeamID);
     }
 
-    // 2) Set a timer to reset/restart the level after 5 seconds
+    // set a timer to reset/restart the level after 5 seconds
     GetWorldTimerManager().SetTimer(
         ResetTimerHandle,
         this,
         &ACTFGameMode::CTFResetLevel,
-        5.0f,   // Delay to show "Team Won!" UI
+        3.0f,
         false
     );
 }
@@ -81,16 +78,13 @@ void ACTFGameMode::CTFResetLevel_Implementation()
 {
     if (!HasAuthority()) return;
 
-    // Option A: ServerTravel
-    // --------------------------------
-    // For reloading the same map:
+
+    // for reloading the same map:
     FString CurrentLevel = GetWorld()->GetMapName();
     CurrentLevel.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
 
-    // Listen if you are using a listen-server setup
+    // listen if you are using a listen-server setup
     FString TravelURL = FString::Printf(TEXT("%s?listen"), *CurrentLevel);
     GetWorld()->ServerTravel(TravelURL);
 
-    // Option B: If you want a brand new map
-    // GetWorld()->ServerTravel(TEXT("NewMapName?listen"));
 }

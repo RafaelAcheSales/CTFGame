@@ -13,7 +13,7 @@
 #include "TeamManager.h"
 #include "EngineUtils.h"
 #include "Engine/LocalPlayer.h"
-#include "CTFPlayerState.h"  // Include the PlayerState header
+#include "CTFPlayerState.h"
 #include "GameFramework/PlayerStart.h"
 #include "Net/UnrealNetwork.h"
 
@@ -49,7 +49,6 @@ ACTFGameCharacter::ACTFGameCharacter()
 	Mesh3P->bCastDynamicShadow = true;
 	Mesh3P->CastShadow = true;
 	Mesh3P->SetRelativeLocation(FVector(0.f, 0.f, -90.f));
-	//Make material dynamic
 	
 
 	SetWeapon(nullptr);
@@ -98,7 +97,7 @@ void ACTFGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Create dynamic materials for Red and Blue teams
+	// create dynamic materials for Red and Blue teams
 	for (int32 i = 0; i < RedMaterials.Num(); i++)
 	{
 		RedDynamicMaterials.Add(UMaterialInstanceDynamic::Create(RedMaterials[i], this));
@@ -108,7 +107,7 @@ void ACTFGameCharacter::BeginPlay()
 		BlueDynamicMaterials.Add(UMaterialInstanceDynamic::Create(BlueMaterials[i], this));
 	};
 
-	//Register timer to call UpdateTeamMaterial every 3 seconds
+	// register timer to call UpdateTeamMaterial every 3 seconds
 
 	GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &ACTFGameCharacter::UpdateTeamMaterial, 3.0f, false);
 }
@@ -149,13 +148,11 @@ void ACTFGameCharacter::UpdateTeamMaterial()
 
 void ACTFGameCharacter::RespawnAtTeamStart()
 {
-	// Ensure we’re on the server if this is a networked game
 	if (!HasAuthority())
 	{
 		return;
 	}
 
-	// Sanity check: you must have a valid PlayerState that knows its team
 	ACTFPlayerState* MyPlayerState = GetPlayerState<ACTFPlayerState>();
 	if (!MyPlayerState)
 	{
@@ -163,7 +160,7 @@ void ACTFGameCharacter::RespawnAtTeamStart()
 		return;
 	}
 
-	// Find the TeamManager in the world
+	// find the TeamManager in the world
 	ATeamManager* TeamManager = Cast<ATeamManager>(
 		UGameplayStatics::GetActorOfClass(GetWorld(), ATeamManager::StaticClass())
 	);
@@ -181,7 +178,7 @@ void ACTFGameCharacter::RespawnAtTeamStart()
 		return;
 	}
 
-	// Teleport the character (location + rotation). 
+	// teleport the character (location + rotation). 
 	// TeleportTo handles potential collision better than SetActorLocation for many Pawns.
 	TeleportTo(
 		MySpawnPoint->GetActorLocation(),
@@ -229,7 +226,7 @@ void ACTFGameCharacter::Server_SetTeamMaterial_Implementation(ETeamColor Team)
 
 bool ACTFGameCharacter::Server_SetTeamMaterial_Validate(ETeamColor Team)
 {
-	return true; // You can add validation logic here if needed
+	return true; // you can add validation logic here if needed
 }
 
 void ACTFGameCharacter::Multicast_SetTeamMaterial_Implementation(ETeamColor Team)
@@ -251,7 +248,7 @@ void ACTFGameCharacter::Multicast_SetTeamMaterial_Implementation(ETeamColor Team
 			return;
 		}
 
-		// Apply new materials
+		// apply new materials
 		if (TeamMaterials && TeamMaterials->Num() > 0)
 		{
 			for (int32 i = 0; i < TeamMaterials->Num(); i++)
@@ -290,10 +287,10 @@ float ACTFGameCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEven
 	{
 		if (HasAuthority())
 		{
-			// Drop the flag if the player is holding one
+			// drop the flag if the player is holding one
 			DropHeldFlag();
 
-			// Find the Team Manager for respawn logic
+			// find the Team Manager for respawn logic
 			ATeamManager* TeamManager = nullptr;
 			for (TActorIterator<ATeamManager> It(GetWorld()); It; ++It)
 			{
@@ -314,7 +311,7 @@ float ACTFGameCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEven
 				}
 			}
 
-			// Reset health after respawn
+			// reset health after respawn
 			Health = MaxHealth;
 		}
 	}
@@ -333,7 +330,7 @@ void ACTFGameCharacter::DropHeldFlag()
 	if (HeldFlag)
 	{
 		HeldFlag->Drop();
-		HeldFlag = nullptr; // Clear reference after dropping
+		HeldFlag = nullptr; // clear flag reference after dropping
 	}
 }
 

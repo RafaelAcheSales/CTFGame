@@ -15,14 +15,12 @@ class CTFGAME_API ADeliveryFlagArea : public AActor
     GENERATED_BODY()
 
 public:
-    // Sets default values for this actor's properties
     ADeliveryFlagArea();
 
 protected:
     virtual void BeginPlay() override;
 
 public:
-    // Trigger Box Component
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UBoxComponent* TriggerBox;
 
@@ -36,7 +34,7 @@ public:
     void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-    // Function to handle flag delivery logic
+    // function to handle flag delivery logic
     UFUNCTION(Server, Reliable, WithValidation)
     void ServerDeliverFlag(AActor* ActorDelivering);
     void ServerDeliverFlag_Implementation(AActor* ActorDelivering);

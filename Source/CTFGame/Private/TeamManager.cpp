@@ -9,7 +9,6 @@ ATeamManager::ATeamManager()
 {
     bReplicates = true;
 
-    // Inicializa os times disponíveis
     TeamColors.Add(ETeamColor::Red);
     TeamColors.Add(ETeamColor::Blue);
     // TeamColors.Add(ETeamColor::Yellow);
@@ -97,12 +96,10 @@ APlayerStart* ATeamManager::GetSpawnPoint(ETeamColor TeamColor)
     {
         if (GetTeamColorFromTag(StartPoint->PlayerStartTag) == TeamColor)
         {
-            //logs all info about spawning
 			UE_LOG(LogTemp, Warning, TEXT("SpawnPoint: %s"), *StartPoint->GetName());
 			UE_LOG(LogTemp, Warning, TEXT("SpawnPoint Tag: %s"), *StartPoint->PlayerStartTag.ToString());
 			UE_LOG(LogTemp, Warning, TEXT("SpawnPoint Team: %d"), (int32)GetTeamColorFromTag(StartPoint->PlayerStartTag));
 			UE_LOG(LogTemp, Warning, TEXT("SpawnPoint Player Start Tag: %s"), *StartPoint->PlayerStartTag.ToString());
-            //current role net
 
             return StartPoint;
         }

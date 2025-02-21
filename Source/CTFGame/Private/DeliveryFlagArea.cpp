@@ -6,17 +6,16 @@
 #include "CTFGameState.h"
 #include "Net/UnrealNetwork.h"
 
-// Sets default values
 ADeliveryFlagArea::ADeliveryFlagArea()
 {
     PrimaryActorTick.bCanEverTick = false;
     bReplicates = true;
 
-    // Create and set up TriggerBox component
+    // create and set up TriggerBox component
     TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
     RootComponent = TriggerBox;
 
-    // Set up collision for trigger detection
+    //set up collision for trigger detection
     TriggerBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     TriggerBox->SetCollisionObjectType(ECC_WorldDynamic);
     TriggerBox->SetCollisionResponseToAllChannels(ECR_Ignore);
@@ -24,7 +23,7 @@ ADeliveryFlagArea::ADeliveryFlagArea()
     TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &ADeliveryFlagArea::OnOverlapBegin);
     TriggerBox->OnComponentEndOverlap.AddDynamic(this, &ADeliveryFlagArea::OnOverlapEnd);
 
-    // Create and set up StationMesh component
+    // create and set up StationMesh component
     StationMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StationMesh"));
     StationMesh->SetupAttachment(RootComponent);
 }

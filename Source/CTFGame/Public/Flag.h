@@ -67,11 +67,11 @@ protected:
 
     FTimerHandle CollisionEnableTimer;
 
-    // Save position for respawn
+    //Save position for respawn
     UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     FVector SpawnLocation;
 
-    // Attaches to player
+    // attaches to player
     void AttachToPlayer(ACTFGameCharacter* Player);
 
     UFUNCTION(NetMulticast, Reliable)

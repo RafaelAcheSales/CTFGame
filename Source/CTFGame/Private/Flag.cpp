@@ -11,18 +11,15 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
-// Sets default values
 AFlag::AFlag()
 {
     PrimaryActorTick.bCanEverTick = true;
     bReplicates = true;
     SpawnLocation = GetActorLocation();
 
-    // Adds a mesh component to the flag
     FlagMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FlagMesh"));
     RootComponent = FlagMesh;
 
-    // Adds capsule collider
     CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionCapsule"));
     CapsuleComponent->InitCapsuleSize(50.0f, 75.0f);
     CapsuleComponent->SetCollisionProfileName(TEXT("Trigger"));
@@ -42,7 +39,7 @@ AFlag::AFlag()
 void AFlag::BeginPlay()
 {
     Super::BeginPlay();
-    if (HasAuthority()) // Apenas o servidor define a posição inicial
+    if (HasAuthority())
     {
         SpawnLocation = GetActorLocation();
     }
@@ -54,7 +51,7 @@ void AFlag::Tick(float DeltaTime)
 
 void AFlag::OnFlagOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (!HasAuthority()) return; // Apenas o servidor pode processar capturas
+    if (!HasAuthority()) return;
 
     ACTFGameCharacter* Character = Cast<ACTFGameCharacter>(OtherActor);
     if (Character)

@@ -5,33 +5,31 @@
 #include "UEnumHelper.h"
 #include "GameFramework/GameModeBase.h"
 #include "Kismet/GameplayStatics.h"
-
-// Include your custom GameMode header
 #include "CTFGameMode.h"
 
 void ACTFGameState::OnRep_Score()
 {
-    // Check if any team has reached or exceeded 3 points
+    //check if any team has reached or exceeded 3 points
     for (const FTeamScore& Team : TeamScores)
     {
         if (Team.Score >= 3)
         {
             OnScoreUpdatedEvent.Broadcast(TeamScores);
-            // Only the server should handle the "end match" logic
+            // Ornly the server should handle the "end match" logic
             if (HasAuthority())
             {
-                // Get the GameMode and tell it who won
+                // get the GameMode and tell it who won
                 if (ACTFGameMode* GM = Cast<ACTFGameMode>(GetWorld()->GetAuthGameMode()))
                 {
                     GM->HandleEndMatch(Team.TeamID);
                 }
             }
-            // Once a winner is found, we can stop checking
+            //once a winner is found, we can stop checking
             return;
         }
     }
 
-    // If nobody has 3 yet, just broadcast the updated scores for UI
+    // if nobody has 3 yet, just broadcast the updated scores for UI
     OnScoreUpdatedEvent.Broadcast(TeamScores);
 }
 
@@ -43,7 +41,7 @@ void ACTFGameState::MulticastShowEndGameUI_Implementation(ETeamColor WinningTeam
 
 void ACTFGameState::UpdateTeamScore(ETeamColor TeamID, int32 Points)
 {
-    if (HasAuthority())  // Only the server can modify
+    if (HasAuthority())
     {
         bool bFound = false;
         for (FTeamScore& Team : TeamScores)
@@ -58,14 +56,11 @@ void ACTFGameState::UpdateTeamScore(ETeamColor TeamID, int32 Points)
 
         if (!bFound)
         {
-            // If this is the first time we see this team, add a new entry
             FTeamScore NewTeam;
             NewTeam.TeamID = TeamID;
             NewTeam.Score = Points;
             TeamScores.Add(NewTeam);
         }
-
-        // Force a replication update (calls OnRep_Score on clients)
         OnRep_Score();
     }
 }

@@ -41,7 +41,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "EndGame")
 	FOnEndGame OnEndGameEvent;
 
-    // Multicast function to show the end-game UI on all machines
+    // multicast function to show the end-game UI on all machines
     UFUNCTION(NetMulticast, Reliable)
     void MulticastShowEndGameUI(ETeamColor WinningTeamID);
 

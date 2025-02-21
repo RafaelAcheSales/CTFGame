@@ -21,13 +21,13 @@ public:
 
     ATeamManager* GetTeamManager();
 
-    // Called by GameState when a team has won the match
+    // called by GameState when a team has won the match
     void HandleEndMatch(ETeamColor WinningTeamID);
 protected:
-    // Override the spawning logic so we can pick the correct spawn based on team
+    // override the spawning logic so we can pick the correct spawn based on team
     virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 
-    // Resets or restarts the level after some delay
+    //resets or restarts the level after some delay
 	UFUNCTION(Server, Reliable)
     void CTFResetLevel();
 
