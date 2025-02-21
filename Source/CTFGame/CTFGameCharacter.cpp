@@ -15,8 +15,7 @@
 #include "Engine/LocalPlayer.h"
 #include "CTFPlayerState.h"  // Include the PlayerState header
 #include "GameFramework/PlayerStart.h"
-#include <Net/UnrealNetwork.h>
-#include <Components/WidgetComponent.h>
+#include "Net/UnrealNetwork.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -103,11 +102,11 @@ void ACTFGameCharacter::BeginPlay()
 	for (int32 i = 0; i < RedMaterials.Num(); i++)
 	{
 		RedDynamicMaterials.Add(UMaterialInstanceDynamic::Create(RedMaterials[i], this));
-	}
+	};
 	for (int32 i = 0; i < BlueMaterials.Num(); i++)
 	{
 		BlueDynamicMaterials.Add(UMaterialInstanceDynamic::Create(BlueMaterials[i], this));
-	}
+	};
 
 	//Register timer to call UpdateTeamMaterial every 3 seconds
 
